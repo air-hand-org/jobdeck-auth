@@ -6,7 +6,7 @@ import (
 	"crypto/subtle"
 	"errors"
 	"fmt"
-	"jobdeck/services/auth/internal/app"
+	"github.com/air-hand-org/jobdeck-auth/internal/app"
 	"strconv"
 	"strings"
 

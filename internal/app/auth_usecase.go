@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"jobdeck/services/auth/internal/domain"
+	"github.com/air-hand-org/jobdeck-auth/internal/domain"
 	"strconv"
 	"strings"
 	"time"

@@ -4,7 +4,7 @@
 package app
 
 import (
-	"jobdeck/services/auth/internal/domain"
+	"github.com/air-hand-org/jobdeck-auth/internal/domain"
 	"sync"
 	"time"
 )

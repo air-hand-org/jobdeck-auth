@@ -1,4 +1,4 @@
-module jobdeck/services/auth
+module github.com/air-hand-org/jobdeck-auth
 
 go 1.26.4
 

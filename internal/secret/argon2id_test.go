@@ -3,7 +3,7 @@ package secret
 import (
 	"testing"
 
-	"jobdeck/services/auth/internal/app"
+	"github.com/air-hand-org/jobdeck-auth/internal/app"
 )
 
 func TestArgon2IDPHCBuilderRoundTrip(t *testing.T) {

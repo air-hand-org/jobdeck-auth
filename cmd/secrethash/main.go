@@ -5,7 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"jobdeck/services/auth/internal/secret"
+	"github.com/air-hand-org/jobdeck-auth/internal/secret"
 	"log"
 	"os"
 )
