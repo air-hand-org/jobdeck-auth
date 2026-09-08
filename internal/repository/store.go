@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+
 	"github.com/air-hand-org/jobdeck-auth/internal/app"
 	authdb "github.com/air-hand-org/jobdeck-auth/internal/repository/gen"
 
