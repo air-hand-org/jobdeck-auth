@@ -5,10 +5,11 @@ import (
 	"crypto/ed25519"
 	"encoding/base64"
 	"errors"
-	"jobdeck/services/auth/internal/app"
-	"jobdeck/services/auth/internal/domain"
 	"strings"
 	"time"
+
+	"github.com/air-hand-org/jobdeck-auth/internal/app"
+	"github.com/air-hand-org/jobdeck-auth/internal/domain"
 
 	"github.com/golang-jwt/jwt/v5"
 )

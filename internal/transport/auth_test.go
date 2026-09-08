@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"jobdeck/services/auth/internal/app"
-	"jobdeck/services/auth/internal/domain"
-	"jobdeck/services/auth/internal/secret"
+	"github.com/air-hand-org/jobdeck-auth/internal/app"
+	"github.com/air-hand-org/jobdeck-auth/internal/domain"
+	"github.com/air-hand-org/jobdeck-auth/internal/secret"
 
 	authv1 "github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/v1"
 	"github.com/stretchr/testify/require"

@@ -2,8 +2,8 @@ package repository
 
 import (
 	"context"
-	"jobdeck/services/auth/internal/domain"
-	authdb "jobdeck/services/auth/internal/repository/gen"
+	"github.com/air-hand-org/jobdeck-auth/internal/domain"
+	authdb "github.com/air-hand-org/jobdeck-auth/internal/repository/gen"
 	"testing"
 
 	"github.com/google/uuid"

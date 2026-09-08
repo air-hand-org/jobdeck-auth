@@ -5,7 +5,7 @@ import (
 	"context"
 	"database/sql"
 
-	migrations "jobdeck/services/auth/internal/db/auth"
+	migrations "github.com/air-hand-org/jobdeck-auth/internal/db/auth"
 
 	_ "github.com/jackc/pgx/v5/stdlib" // Register the pgx database driver.
 	"github.com/pressly/goose/v3"

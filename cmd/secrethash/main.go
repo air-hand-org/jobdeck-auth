@@ -5,9 +5,10 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"jobdeck/services/auth/internal/secret"
 	"log"
 	"os"
+
+	"github.com/air-hand-org/jobdeck-auth/internal/secret"
 )
 
 func password() (string, error) {

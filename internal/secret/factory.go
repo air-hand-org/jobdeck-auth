@@ -1,6 +1,6 @@
 package secret
 
-import "jobdeck/services/auth/internal/app"
+import "github.com/air-hand-org/jobdeck-auth/internal/app"
 
 // PHCBuilderFactory creates password hashing builders.
 type PHCBuilderFactory struct{}

@@ -2,9 +2,9 @@ package app_test
 
 import (
 	"context"
-	"jobdeck/services/auth/internal/app"
-	"jobdeck/services/auth/internal/domain"
-	"jobdeck/services/auth/internal/secret"
+	"github.com/air-hand-org/jobdeck-auth/internal/app"
+	"github.com/air-hand-org/jobdeck-auth/internal/domain"
+	"github.com/air-hand-org/jobdeck-auth/internal/secret"
 	"testing"
 	"time"
 

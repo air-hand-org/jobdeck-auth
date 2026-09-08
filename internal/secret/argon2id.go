@@ -6,9 +6,10 @@ import (
 	"crypto/subtle"
 	"errors"
 	"fmt"
-	"jobdeck/services/auth/internal/app"
 	"strconv"
 	"strings"
+
+	"github.com/air-hand-org/jobdeck-auth/internal/app"
 
 	"golang.org/x/crypto/argon2"
 )

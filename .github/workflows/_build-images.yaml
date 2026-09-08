@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       push:
-        description: Push images to Artifact Registry instead of only building them.
+        description: Publish images to Artifact Registry and GHCR instead of only building them.
         required: false
         type: boolean
         default: false
@@ -35,7 +35,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: read
     steps:
       - uses: actions/checkout@v7
         with:
@@ -51,57 +50,14 @@ jobs:
           repositories: |
             api-contracts
       - uses: docker/setup-buildx-action@v4
-      # Keep pairs small enough for the hosted runner while sharing its Docker
-      # layer and BuildKit cache with every following build.
-      - parallel:
-          - name: Build forward-proxy image
-            uses: docker/build-push-action@v7
-            with:
-              context: containers/forward-proxy
-              file: containers/forward-proxy/Dockerfile
-              push: false
-          - name: Build job-api image
-            uses: docker/build-push-action@v7
-            with:
-              context: .
-              file: containers/job-api/Dockerfile
-              push: false
-              secrets: |
-                github_contents_token=${{ steps.app-token.outputs.token }}
-      - parallel:
-          - name: Build auth image
-            uses: docker/build-push-action@v7
-            with:
-              context: .
-              file: containers/auth/Dockerfile
-              push: false
-              secrets: |
-                github_contents_token=${{ steps.app-token.outputs.token }}
-          - name: Build job-worker image
-            uses: docker/build-push-action@v7
-            with:
-              context: .
-              file: containers/job-worker/Dockerfile
-              push: false
-              secrets: |
-                github_contents_token=${{ steps.app-token.outputs.token }}
-      - parallel:
-          - name: Build demo image
-            uses: docker/build-push-action@v7
-            with:
-              context: .
-              file: containers/demo/Dockerfile
-              push: false
-          - name: Build ui image
-            uses: docker/build-push-action@v7
-            with:
-              context: .
-              file: containers/ui/Dockerfile
-              push: false
-              build-args: |
-                GITHUB_ACTOR=${{ github.actor }}
-              secrets: |
-                github_packages_token=${{ secrets.GITHUB_TOKEN }}
+      - name: Build auth image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64
+          push: false
+          secrets: |
+            github_contents_token=${{ steps.app-token.outputs.token }}
 
   publish:
     if: ${{ inputs.push == true }}
@@ -109,7 +65,7 @@ jobs:
     environment: ${{ inputs.environment || 'production' }}
     permissions:
       contents: read
-      packages: read
+      packages: write
       id-token: write
     env:
       ARTIFACT_REGISTRY_HOST: asia-northeast1-docker.pkg.dev
@@ -147,58 +103,52 @@ jobs:
           registry: ${{ env.ARTIFACT_REGISTRY_HOST }}
           username: oauth2accesstoken
           password: ${{ steps.google-auth.outputs.access_token }}
-      - parallel:
-          - name: Build and push forward-proxy image
-            uses: docker/build-push-action@v7
-            with:
-              context: containers/forward-proxy
-              file: containers/forward-proxy/Dockerfile
-              push: true
-              tags: ${{ env.ARTIFACT_REGISTRY_HOST }}/${{ vars.GCP_PROJECT_ID }}/jobdeck-forward-proxy/forward-proxy:${{ env.IMAGE_TAG }}
-          - name: Build and push job-api image
-            uses: docker/build-push-action@v7
-            with:
-              context: .
-              file: containers/job-api/Dockerfile
-              push: true
-              tags: ${{ env.ARTIFACT_REGISTRY_HOST }}/${{ vars.GCP_PROJECT_ID }}/jobdeck-job-api/job-api:${{ env.IMAGE_TAG }}
-              secrets: |
-                github_contents_token=${{ steps.app-token.outputs.token }}
-      - parallel:
-          - name: Build and push auth image
-            uses: docker/build-push-action@v7
-            with:
-              context: .
-              file: containers/auth/Dockerfile
-              push: true
-              tags: ${{ env.ARTIFACT_REGISTRY_HOST }}/${{ vars.GCP_PROJECT_ID }}/jobdeck-auth/auth:${{ env.IMAGE_TAG }}
-              secrets: |
-                github_contents_token=${{ steps.app-token.outputs.token }}
-          - name: Build and push job-worker image
-            uses: docker/build-push-action@v7
-            with:
-              context: .
-              file: containers/job-worker/Dockerfile
-              push: true
-              tags: ${{ env.ARTIFACT_REGISTRY_HOST }}/${{ vars.GCP_PROJECT_ID }}/jobdeck-job-worker/job-worker:${{ env.IMAGE_TAG }}
-              secrets: |
-                github_contents_token=${{ steps.app-token.outputs.token }}
-      - parallel:
-          - name: Build and push demo image
-            uses: docker/build-push-action@v7
-            with:
-              context: .
-              file: containers/demo/Dockerfile
-              push: true
-              tags: ${{ env.ARTIFACT_REGISTRY_HOST }}/${{ vars.GCP_PROJECT_ID }}/jobdeck-demo/demo:${{ env.IMAGE_TAG }}
-          - name: Build and push ui image
-            uses: docker/build-push-action@v7
-            with:
-              context: .
-              file: containers/ui/Dockerfile
-              push: true
-              tags: ${{ env.ARTIFACT_REGISTRY_HOST }}/${{ vars.GCP_PROJECT_ID }}/jobdeck-ui/ui:${{ env.IMAGE_TAG }}
-              build-args: |
-                GITHUB_ACTOR=${{ github.actor }}
-              secrets: |
-                github_packages_token=${{ secrets.GITHUB_TOKEN }}
+      - name: Check whether auth image already exists
+        id: image
+        env:
+          IMAGE: ${{ env.ARTIFACT_REGISTRY_HOST }}/${{ vars.GCP_PROJECT_ID }}/jobdeck-auth/auth:${{ env.IMAGE_TAG }}
+        run: |
+          if docker buildx imagetools inspect "$IMAGE" > /dev/null 2> "$RUNNER_TEMP/ar-inspect-error"; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Image already exists; reusing $IMAGE"
+          elif grep -Eq 'manifest unknown|MANIFEST_UNKNOWN|NAME_UNKNOWN|: not found$' "$RUNNER_TEMP/ar-inspect-error"; then
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          else
+            cat "$RUNNER_TEMP/ar-inspect-error" >&2
+            exit 1
+          fi
+      - name: Build and push auth image
+        if: ${{ steps.image.outputs.exists != 'true' }}
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: ${{ env.ARTIFACT_REGISTRY_HOST }}/${{ vars.GCP_PROJECT_ID }}/jobdeck-auth/auth:${{ env.IMAGE_TAG }}
+          secrets: |
+            github_contents_token=${{ steps.app-token.outputs.token }}
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # Always check GHCR, including when a previous attempt already pushed to AR.
+      - name: Copy auth image to GHCR if missing
+        env:
+          AR_IMAGE: ${{ env.ARTIFACT_REGISTRY_HOST }}/${{ vars.GCP_PROJECT_ID }}/jobdeck-auth/auth
+          GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/jobdeck-auth
+        run: |
+          if docker buildx imagetools inspect "$GHCR_IMAGE:$IMAGE_TAG" > /dev/null 2> "$RUNNER_TEMP/ghcr-inspect-error"; then
+            echo "Image already exists; reusing $GHCR_IMAGE:$IMAGE_TAG"
+            exit 0
+          elif ! grep -Eq 'manifest unknown|MANIFEST_UNKNOWN|NAME_UNKNOWN|: not found$' "$RUNNER_TEMP/ghcr-inspect-error"; then
+            cat "$RUNNER_TEMP/ghcr-inspect-error" >&2
+            exit 1
+          fi
+
+          digest=$(docker buildx imagetools inspect "$AR_IMAGE:$IMAGE_TAG" --format '{{json .Manifest}}' | jq -er '.digest')
+          docker buildx imagetools create \
+            --prefer-index=false \
+            --tag "$GHCR_IMAGE:$IMAGE_TAG" \
+            "$AR_IMAGE@$digest"

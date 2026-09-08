@@ -3,7 +3,8 @@ package transport
 
 import (
 	"context"
-	"jobdeck/services/auth/internal/app"
+
+	"github.com/air-hand-org/jobdeck-auth/internal/app"
 
 	authv1 "github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/v1"
 
