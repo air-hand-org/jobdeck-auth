@@ -5,9 +5,7 @@ on:
     types:
       - published
 
-permissions:
-  contents: read
-  id-token: write
+permissions: {}
 
 concurrency:
   group: deploy-production
@@ -31,6 +29,8 @@ jobs:
     if: ${{ github.event.release.prerelease == false }}
     needs: images
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v7
         with:
