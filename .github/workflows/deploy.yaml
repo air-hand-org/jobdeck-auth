@@ -27,18 +27,33 @@ jobs:
       packages: read
       id-token: write
 
-  app:
+  prepare-deploy:
     # Keep the image push and revision apply in one release chain: app resources
     # must never refer to an Artifact Registry tag that has not been pushed.
     if: ${{ github.event.release.prerelease == false }}
     needs: images
-    uses: ./.github/workflows/_tofu.yaml
-    with:
-      root: app
-      command: apply
-      environment: production
-      image_tag: ${{ github.event.release.tag_name }}
-    secrets: inherit
-    permissions:
-      contents: read
-      id-token: write
+    # TODO repository_dispatch to air-hand-org/jobdeck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Create release GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.GH_APP_RELEASE_CLIENT_ID }}
+          private-key: ${{ secrets.GH_APP_RELEASE_PRIVATE_KEY }}
+          permission-contents: write
+          owner: ${{ github.repository_owner }}
+          repositories: |
+            jobdeck
+      - uses: actions/github-script@v9
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const script = require('./.github/scripts/release-dispatch.js');
+            await script({github, context}).catch((error) => core.setFailed(error.message));
+        env:
+          TARGET_REPOSITORY: jobdeck
+          SERVICE_NAME: auth
