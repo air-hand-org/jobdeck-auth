@@ -11,7 +11,7 @@ module.exports = async ({ github, context }) => {
   await github.rest.repos.createDispatchEvent({
     owner: context.repo.owner,
     repo: TARGET_REPOSITORY,
-    event_type: 'release-service',
+    event_type: 'image-published',
     client_payload: {
       service: SERVICE_NAME,
       tag: release.tag_name,
