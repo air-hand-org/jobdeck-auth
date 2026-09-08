@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       push:
-        description: Push images to Artifact Registry instead of only building them.
+        description: Publish images to Artifact Registry and GHCR instead of only building them.
         required: false
         type: boolean
         default: false
@@ -35,7 +35,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: read
     steps:
       - uses: actions/checkout@v7
         with:
@@ -55,6 +54,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
+          platforms: linux/amd64
           push: false
           secrets: |
             github_contents_token=${{ steps.app-token.outputs.token }}
@@ -65,7 +65,7 @@ jobs:
     environment: ${{ inputs.environment || 'production' }}
     permissions:
       contents: read
-      packages: read
+      packages: write
       id-token: write
     env:
       ARTIFACT_REGISTRY_HOST: asia-northeast1-docker.pkg.dev
@@ -108,18 +108,47 @@ jobs:
         env:
           IMAGE: ${{ env.ARTIFACT_REGISTRY_HOST }}/${{ vars.GCP_PROJECT_ID }}/jobdeck-auth/auth:${{ env.IMAGE_TAG }}
         run: |
-          if docker buildx imagetools inspect "$IMAGE" >/dev/null 2>&1; then
+          if docker buildx imagetools inspect "$IMAGE" > /dev/null 2> "$RUNNER_TEMP/ar-inspect-error"; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
             echo "Image already exists; reusing $IMAGE"
-          else
+          elif grep -Eq 'manifest unknown|MANIFEST_UNKNOWN|NAME_UNKNOWN|: not found$' "$RUNNER_TEMP/ar-inspect-error"; then
             echo "exists=false" >> "$GITHUB_OUTPUT"
+          else
+            cat "$RUNNER_TEMP/ar-inspect-error" >&2
+            exit 1
           fi
       - name: Build and push auth image
         if: ${{ steps.image.outputs.exists != 'true' }}
         uses: docker/build-push-action@v7
         with:
           context: .
+          platforms: linux/amd64
           push: true
           tags: ${{ env.ARTIFACT_REGISTRY_HOST }}/${{ vars.GCP_PROJECT_ID }}/jobdeck-auth/auth:${{ env.IMAGE_TAG }}
           secrets: |
             github_contents_token=${{ steps.app-token.outputs.token }}
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # Always check GHCR, including when a previous attempt already pushed to AR.
+      - name: Copy auth image to GHCR if missing
+        env:
+          AR_IMAGE: ${{ env.ARTIFACT_REGISTRY_HOST }}/${{ vars.GCP_PROJECT_ID }}/jobdeck-auth/auth
+          GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/jobdeck-auth
+        run: |
+          if docker buildx imagetools inspect "$GHCR_IMAGE:$IMAGE_TAG" > /dev/null 2> "$RUNNER_TEMP/ghcr-inspect-error"; then
+            echo "Image already exists; reusing $GHCR_IMAGE:$IMAGE_TAG"
+            exit 0
+          elif ! grep -Eq 'manifest unknown|MANIFEST_UNKNOWN|NAME_UNKNOWN|: not found$' "$RUNNER_TEMP/ghcr-inspect-error"; then
+            cat "$RUNNER_TEMP/ghcr-inspect-error" >&2
+            exit 1
+          fi
+
+          digest=$(docker buildx imagetools inspect "$AR_IMAGE:$IMAGE_TAG" --format '{{json .Manifest}}' | jq -er '.digest')
+          docker buildx imagetools create \
+            --prefer-index=false \
+            --tag "$GHCR_IMAGE:$IMAGE_TAG" \
+            "$AR_IMAGE@$digest"
