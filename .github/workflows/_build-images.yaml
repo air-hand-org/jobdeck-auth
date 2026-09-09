@@ -131,7 +131,7 @@ jobs:
         uses: docker/login-action@v4
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
+          username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       # Always check GHCR, including when a previous attempt already pushed to AR.
       - name: Copy auth image to GHCR if missing
