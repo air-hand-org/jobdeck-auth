@@ -3,9 +3,11 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"strings"
@@ -20,10 +22,12 @@ import (
 	"github.com/air-hand-org/jobdeck-auth/internal/transport"
 
 	authv1 "github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/v1"
+	jwksserver "github.com/air-hand-org/api-contracts/packages/jobdeck/auth/http/go/v1/jwks/server"
 
 	"buf.build/go/protovalidate"
 	protovalidate_middleware "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/protovalidate"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
@@ -71,6 +75,10 @@ func main() {
 	if grpcPort == "" {
 		grpcPort = "9091"
 	}
+	httpPort := os.Getenv("HTTP_PORT")
+	if httpPort == "" {
+		httpPort = "8080"
+	}
 
 	shutdownTelemetry, err := telemetry.Init(signalCtx, "auth")
 	if err != nil {
@@ -99,7 +107,8 @@ func main() {
 
 	store := repository.NewStore(pool)
 
-	issuer, err := token.NewJWTIssuer(os.Getenv("AUTH_JWT_PRIVATE_KEY"))
+	jwtKeyID := os.Getenv("AUTH_JWT_KEY_ID")
+	issuer, err := token.NewJWTIssuer(os.Getenv("AUTH_JWT_PRIVATE_KEY"), jwtKeyID)
 	if err != nil {
 		log.Fatalf("failed to new jwt isser %v", err)
 	}
@@ -125,12 +134,34 @@ func main() {
 	if strings.EqualFold(os.Getenv("GRPC_REFLECTION_ENABLED"), "true") {
 		reflection.Register(s)
 	}
+	jwksController := jwksserver.NewDefaultAPIController(transport.NewJWKSService(issuer.PublicKey(), jwtKeyID))
+	httpServer := &http.Server{
+		Addr:              fmt.Sprintf(":%s", httpPort),
+		Handler:           otelhttp.NewHandler(jwksserver.NewRouter(jwksController), "jwks"),
+		ReadHeaderTimeout: 5 * time.Second,
+	}
 
 	g, ctx := errgroup.WithContext(signalCtx)
 
 	g.Go(func() error {
 		runHealthCheck(ctx, healthcheck, pool)
 		return nil
+	})
+
+	g.Go(func() error {
+		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			return err
+		}
+		return nil
+	})
+
+	g.Go(func() error {
+		<-ctx.Done()
+		s.GracefulStop()
+
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		return httpServer.Shutdown(shutdownCtx)
 	})
 
 	g.Go(func() error {

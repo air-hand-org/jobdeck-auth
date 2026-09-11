@@ -34,6 +34,7 @@ func decodePrivateKey(encoded string) (ed25519.PrivateKey, error) {
 // JWTIssuer issues signed JWTs.
 type JWTIssuer struct {
 	privateKey ed25519.PrivateKey
+	keyID      string
 }
 
 var _ app.TokenIssuer = (*JWTIssuer)(nil)
@@ -52,6 +53,7 @@ func (i JWTIssuer) Token(actorID domain.ActorId, actorType string, audience stri
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
+	token.Header["kid"] = i.keyID
 	signedJWT, err := token.SignedString(i.privateKey)
 	if err != nil {
 		return app.AccessToken{}, err
@@ -61,6 +63,11 @@ func (i JWTIssuer) Token(actorID domain.ActorId, actorType string, audience stri
 		TokenType:    "Bearer",
 		ExpiresInSec: int64(i.expiresDuration(actorType).Seconds()),
 	}, nil
+}
+
+// PublicKey returns the public key corresponding to the signing key.
+func (i JWTIssuer) PublicKey() ed25519.PublicKey {
+	return i.privateKey.Public().(ed25519.PublicKey)
 }
 
 func (i JWTIssuer) expiresDuration(actorType string) time.Duration {
@@ -73,13 +80,17 @@ func (i JWTIssuer) expiresDuration(actorType string) time.Duration {
 }
 
 // NewJWTIssuer creates a JWT issuer from an encoded private key.
-func NewJWTIssuer(encodedPrivateKey string) (*JWTIssuer, error) {
+func NewJWTIssuer(encodedPrivateKey string, keyID string) (*JWTIssuer, error) {
 	privateKey, err := decodePrivateKey(encodedPrivateKey)
 	if err != nil {
 		return nil, err
 	}
+	if strings.TrimSpace(keyID) == "" {
+		return nil, errors.New("JWT key ID is required")
+	}
 
 	return &JWTIssuer{
 		privateKey: privateKey,
+		keyID:      keyID,
 	}, nil
 }
