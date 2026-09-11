@@ -16,7 +16,7 @@ func TestJWTIssuerTokenContainsExpectedClaims(t *testing.T) {
 
 	publicKey, privateKey, err := ed25519.GenerateKey(nil)
 	require.NoError(t, err)
-	issuer, err := NewJWTIssuer(base64.StdEncoding.EncodeToString(privateKey))
+	issuer, err := NewJWTIssuer(base64.StdEncoding.EncodeToString(privateKey), "auth-key-2026-01")
 	require.NoError(t, err)
 	now := time.Date(2026, time.July, 30, 0, 0, 0, 0, time.UTC)
 	actorID := uuid.New()
@@ -48,6 +48,7 @@ func TestJWTIssuerTokenContainsExpectedClaims(t *testing.T) {
 			claims := ActorClaims{}
 			parsed, err := jwt.ParseWithClaims(accessToken.Token, &claims, func(token *jwt.Token) (any, error) {
 				require.IsType(t, jwt.SigningMethodEdDSA, token.Method)
+				require.Equal(t, "auth-key-2026-01", token.Header["kid"])
 				return publicKey, nil
 			}, jwt.WithTimeFunc(func() time.Time { return now }))
 			require.NoError(t, err)
