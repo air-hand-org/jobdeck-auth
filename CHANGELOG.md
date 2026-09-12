@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/air-hand-org/jobdeck-auth/compare/v1.0.5...v1.1.0) (2026-09-11)
+
+
+### Features
+
+* **auth:** expose JWKS endpoint ([#7](https://github.com/air-hand-org/jobdeck-auth/issues/7)) ([61b2e7f](https://github.com/air-hand-org/jobdeck-auth/commit/61b2e7fe8275aed5bd5e0983ec79ba637fa10354))
+
 ## [1.0.5](https://github.com/air-hand-org/jobdeck-auth/compare/v1.0.4...v1.0.5) (2026-09-08)
 
 
