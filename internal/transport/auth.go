@@ -6,7 +6,7 @@ import (
 
 	"github.com/air-hand-org/jobdeck-auth/internal/app"
 
-	authv1 "github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/v1"
+	authv1 "github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/proto/v1"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

@@ -7,7 +7,7 @@ import (
 	"encoding/base64"
 	"net/http"
 
-	jwksserver "github.com/air-hand-org/api-contracts/packages/jobdeck/auth/http/go/v1/jwks/server"
+	jwksserver "github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/openapi/v1/jwks/server"
 )
 
 // JWKSService serves the public key used to verify Auth-issued JWTs.

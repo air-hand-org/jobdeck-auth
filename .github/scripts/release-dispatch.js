@@ -4,8 +4,6 @@ module.exports = async ({ github, context }) => {
     SERVICE_NAME,
   } = process.env;
 
-  console.debug(JSON.stringify(context));
-
   const release = context.payload.release;
 
   await github.rest.repos.createDispatchEvent({
