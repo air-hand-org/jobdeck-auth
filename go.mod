@@ -4,7 +4,7 @@ go 1.26.4
 
 require (
 	buf.build/go/protovalidate v1.2.0
-	github.com/air-hand-org/api-contracts/packages/jobdeck/auth v1.2.0
+	github.com/air-hand-org/api-contracts/packages/jobdeck/auth v1.3.0
 	github.com/cockroachdb/errors v1.14.0
 	github.com/exaring/otelpgx v0.11.1
 	github.com/golang-jwt/jwt/v5 v5.3.1
@@ -19,7 +19,7 @@ require (
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.69.0
 	go.opentelemetry.io/otel v1.45.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.44.0
-	go.opentelemetry.io/otel/sdk v1.44.0
+	go.opentelemetry.io/otel/sdk v1.45.0
 	golang.org/x/crypto v0.54.0
 	golang.org/x/sync v0.22.0
 	google.golang.org/grpc v1.82.1

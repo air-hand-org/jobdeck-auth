@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	jwksserver "github.com/air-hand-org/api-contracts/packages/jobdeck/auth/http/go/v1/jwks/server"
+	jwksserver "github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/openapi/v1/jwks/server"
 	"github.com/stretchr/testify/require"
 )
 

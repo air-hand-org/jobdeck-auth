@@ -21,8 +21,8 @@ import (
 	"github.com/air-hand-org/jobdeck-auth/internal/token"
 	"github.com/air-hand-org/jobdeck-auth/internal/transport"
 
-	authv1 "github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/v1"
-	jwksserver "github.com/air-hand-org/api-contracts/packages/jobdeck/auth/http/go/v1/jwks/server"
+	authv1 "github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/proto/v1"
+	jwksserver "github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/openapi/v1/jwks/server"
 
 	"buf.build/go/protovalidate"
 	protovalidate_middleware "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/protovalidate"
