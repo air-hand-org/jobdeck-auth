@@ -12,7 +12,6 @@
 *.tfstate.*
 *.tfvars
 *.tfvars.json
-**/*_test.go
 playwright/.auth
 playwright-traces
 .env*

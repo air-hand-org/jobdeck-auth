@@ -13,11 +13,8 @@ RUN --mount=type=secret,id=github_contents_token \
     GIT_CONFIG_VALUE_0="https://github.com/" \
     go mod download
 
-# The image runs only these commands. Keep unrelated repository changes out of
-# the build cache key.
-COPY cmd/entrypoint ./cmd/entrypoint
-COPY cmd/migrator ./cmd/migrator
-COPY cmd/server ./cmd/server
+# Keep unrelated repository changes out of the build cache key.
+COPY cmd ./cmd
 COPY internal ./internal
 RUN --mount=type=secret,id=github_contents_token \
     --mount=type=cache,target=/go/pkg/mod,id=jobdeck-go-mod \
