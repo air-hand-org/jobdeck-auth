@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/air-hand-org/jobdeck-auth/compare/v1.1.1...v1.2.0) (2026-09-18)
+
+
+### Features
+
+* add auth Envoy proxy ([#11](https://github.com/air-hand-org/jobdeck-auth/issues/11)) ([f3eef27](https://github.com/air-hand-org/jobdeck-auth/commit/f3eef270e97f50ee7d2a860fe16e40d1f0ddcb61))
+
 ## [1.1.1](https://github.com/air-hand-org/jobdeck-auth/compare/v1.1.0...v1.1.1) (2026-09-15)
 
 
