@@ -69,10 +69,7 @@ jobs:
           load: true
           tags: jobdeck-auth-proxy:test
       - name: Test auth proxy routing
-        env:
-          AUTH_IMAGE: jobdeck-auth:test
-          AUTH_PROXY_IMAGE: jobdeck-auth-proxy:test
-        run: sh ./tests/auth-proxy/run.sh
+        run: make auth-proxy-integration-test
 
   publish:
     if: ${{ inputs.push == true }}

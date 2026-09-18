@@ -28,29 +28,7 @@ jobs:
   prepare-deploy:
     if: ${{ github.event.release.prerelease == false }}
     needs: images
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-      - name: Create release GitHub App token
-        id: app-token
-        uses: actions/create-github-app-token@v3
-        with:
-          client-id: ${{ vars.GH_APP_RELEASE_CLIENT_ID }}
-          private-key: ${{ secrets.GH_APP_RELEASE_PRIVATE_KEY }}
-          permission-contents: write
-          owner: ${{ github.repository_owner }}
-          repositories: |
-            jobdeck
-      - uses: actions/github-script@v9
-        with:
-          github-token: ${{ steps.app-token.outputs.token }}
-          script: |
-            const script = require('./.github/scripts/release-dispatch.js');
-            await script({github, context}).catch((error) => core.setFailed(error.message));
-        env:
-          TARGET_REPOSITORY: jobdeck
-          SERVICE_NAMES: '["auth", "auth-proxy"]'
+    uses: air-hand-org/jobdeck-actions/.github/workflows/reusable-release-dispatch.yaml@v1
+    with:
+      service-names: auth,auth-proxy
+    secrets: inherit
