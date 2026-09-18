@@ -53,4 +53,4 @@ jobs:
             await script({github, context}).catch((error) => core.setFailed(error.message));
         env:
           TARGET_REPOSITORY: jobdeck
-          SERVICE_NAME: auth
+          SERVICE_NAMES: '["auth", "auth-proxy"]'
