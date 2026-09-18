@@ -1,10 +1,11 @@
 CONTAINER_MK := $(lastword $(MAKEFILE_LIST))
 CONTAINER_MK_DIR := $(dir $(abspath $(CONTAINER_MK)))
+GITHUB_CONTENTS_TOKEN ?= $(shell gh auth token)
 
 .PHONY: container-build
 container-build:
 	@cd $(CONTAINER_MK_DIR)../ \
-	&& GITHUB_CONTENTS_TOKEN="$$(gh auth token)" docker build \
+	&& docker build \
 		-t jobdeck-auth:test \
 		--secret id=github_contents_token,env=GITHUB_CONTENTS_TOKEN \
 		. \
