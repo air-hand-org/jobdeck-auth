@@ -69,8 +69,6 @@ jobs:
           load: true
           tags: jobdeck-auth-proxy:test
       - name: Test auth proxy routing
-        env:
-          GITHUB_CONTENTS_TOKEN: ${{ steps.app-token.outputs.token }}
         run: make auth-proxy-integration-test
 
   publish:

@@ -17,6 +17,9 @@ auth-proxy-build:
 	&& docker build -t jobdeck-auth-proxy:test ./containers/auth-proxy
 
 .PHONY: auth-proxy-integration-test
-auth-proxy-integration-test: container-build auth-proxy-build
+auth-proxy-integration-test:
 	@cd $(CONTAINER_MK_DIR)../ \
 	&& AUTH_IMAGE=jobdeck-auth:test AUTH_PROXY_IMAGE=jobdeck-auth-proxy:test sh ./tests/auth-proxy/run.sh
+
+.PHONY: auth-proxy-build-and-test
+auth-proxy-build-and-test: container-build auth-proxy-build auth-proxy-integration-test
