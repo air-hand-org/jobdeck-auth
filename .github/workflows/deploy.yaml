@@ -8,7 +8,7 @@ on:
 permissions: {}
 
 concurrency:
-  group: deploy-production
+  group: ${{ github.workflow }}
   cancel-in-progress: false
 
 jobs:

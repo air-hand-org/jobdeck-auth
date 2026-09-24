@@ -2,7 +2,7 @@
   "bootstrap-sha": "41885a734f3b500e82a3ffafed405830e482e4ef",
   "packages": {
     ".": {
-      "release-type": "simple",
+      "release-type": "go",
       "package-name": "jobdeck-auth",
       "draft": false,
       "include-component-in-tag": false,
