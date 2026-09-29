@@ -1,32 +1,30 @@
-// Package transport exposes auth application services over gRPC.
+// Package transport exposes auth application services over HTTP and RPC.
 package transport
 
 import (
 	"context"
+	"errors"
 
 	"github.com/air-hand-org/jobdeck-auth/internal/app"
 
 	authv1 "github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/proto/v1"
+	"github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/proto/v1/authv1connect"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"connectrpc.com/connect"
 )
 
-// AuthServiceServer exposes the auth use case over gRPC.
-type AuthServiceServer struct {
+// AuthServiceHandler exposes the auth use case over Connect, gRPC, and gRPC-Web.
+type AuthServiceHandler struct {
 	usecase app.AuthUsecase
-
-	// TODO: switch to UnsafeAuthServiceServer
-	authv1.UnimplementedAuthServiceServer
 }
 
-var _ authv1.AuthServiceServer = (*AuthServiceServer)(nil)
+var _ authv1connect.AuthServiceHandler = (*AuthServiceHandler)(nil)
 
 // AuthenticateLocalClient authenticates a local client and returns an access token.
-func (s *AuthServiceServer) AuthenticateLocalClient(ctx context.Context, req *authv1.AuthenticateLocalClientRequest) (*authv1.AuthenticateLocalClientResponse, error) {
+func (s *AuthServiceHandler) AuthenticateLocalClient(ctx context.Context, req *authv1.AuthenticateLocalClientRequest) (*authv1.AuthenticateLocalClientResponse, error) {
 	token, err := s.usecase.Authenticate(ctx, req.GetClientId(), req.GetClientSecret(), req.GetAudience())
 	if err != nil {
-		return nil, status.Error(codes.Unauthenticated, "failed to authenticate")
+		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("failed to authenticate"))
 	}
 	return &authv1.AuthenticateLocalClientResponse{
 		Token: &authv1.Token{
@@ -37,9 +35,14 @@ func (s *AuthServiceServer) AuthenticateLocalClient(ctx context.Context, req *au
 	}, nil
 }
 
-// NewAuthServiceServer creates an auth gRPC service server.
-func NewAuthServiceServer(usecase *app.AuthUsecase) *AuthServiceServer {
-	return &AuthServiceServer{
+// ExchangeGoogleIdToken is reserved for a future Google identity integration.
+func (s *AuthServiceHandler) ExchangeGoogleIdToken(context.Context, *authv1.ExchangeGoogleIdTokenRequest) (*authv1.ExchangeGoogleIdTokenResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("ExchangeGoogleIdToken is not implemented"))
+}
+
+// NewAuthServiceHandler creates an auth RPC handler.
+func NewAuthServiceHandler(usecase *app.AuthUsecase) *AuthServiceHandler {
+	return &AuthServiceHandler{
 		usecase: *usecase,
 	}
 }

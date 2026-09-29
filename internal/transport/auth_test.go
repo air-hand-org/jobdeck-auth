@@ -2,7 +2,8 @@ package transport
 
 import (
 	"context"
-	"net"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -10,11 +11,15 @@ import (
 	"github.com/air-hand-org/jobdeck-auth/internal/domain"
 	"github.com/air-hand-org/jobdeck-auth/internal/secret"
 
+	"connectrpc.com/connect"
+	"connectrpc.com/validate"
 	authv1 "github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/proto/v1"
+	"github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/proto/v1/authv1connect"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/test/bufconn"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 )
 
 type authRepositoryStub struct {
@@ -45,7 +50,7 @@ func (tokenIssuerStub) Token(domain.ActorId, string, string, time.Time) (app.Acc
 	return app.AccessToken{Token: "token", TokenType: "Bearer", ExpiresInSec: 60}, nil
 }
 
-func TestAuthServiceServerAuthenticateLocalClient(t *testing.T) {
+func TestAuthServiceHandlerProtocols(t *testing.T) {
 	t.Parallel()
 
 	factory := secret.NewPHCBuilderFactory()
@@ -60,21 +65,39 @@ func TestAuthServiceServerAuthenticateLocalClient(t *testing.T) {
 		factory,
 	)
 
-	listener := bufconn.Listen(1024 * 1024)
-	server := grpc.NewServer()
-	authv1.RegisterAuthServiceServer(server, NewAuthServiceServer(usecase))
-	go func() { _ = server.Serve(listener) }()
-	t.Cleanup(server.Stop)
+	path, handler := authv1connect.NewAuthServiceHandler(NewAuthServiceHandler(usecase),
+		connect.WithInterceptors(validate.NewInterceptor()))
+	mux := http.NewServeMux()
+	mux.Handle(path, handler)
+	server := httptest.NewUnstartedServer(mux)
+	server.EnableHTTP2 = true
+	server.StartTLS()
+	t.Cleanup(server.Close)
 
-	connection, err := grpc.NewClient("passthrough:///auth", grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
-		return listener.Dial()
-	}), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	request := &authv1.AuthenticateLocalClientRequest{
+		ClientId: "worker", ClientSecret: "secret", Audience: "jobdeck-job-api",
+	}
+	connectClient := authv1connect.NewAuthServiceClient(server.Client(), server.URL)
+	response, err := connectClient.AuthenticateLocalClient(context.Background(), request)
+	require.NoError(t, err)
+	require.Equal(t, "token", response.GetToken().GetAccessToken())
+
+	connection, err := grpc.NewClient(server.Listener.Addr().String(),
+		grpc.WithTransportCredentials(credentials.NewTLS(server.Client().Transport.(*http.Transport).TLSClientConfig)))
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, connection.Close()) })
 
-	response, err := authv1.NewAuthServiceClient(connection).AuthenticateLocalClient(context.Background(), &authv1.AuthenticateLocalClientRequest{
-		ClientId: "worker", ClientSecret: "secret", Audience: "jobdeck-job-api",
-	})
+	response, err = authv1.NewAuthServiceClient(connection).AuthenticateLocalClient(context.Background(), request)
 	require.NoError(t, err)
 	require.Equal(t, "token", response.GetToken().GetAccessToken())
+
+	_, err = authv1.NewAuthServiceClient(connection).AuthenticateLocalClient(context.Background(), &authv1.AuthenticateLocalClientRequest{
+		ClientId: "worker", ClientSecret: "wrong", Audience: "jobdeck-job-api",
+	})
+	require.Equal(t, codes.Unauthenticated, status.Code(err))
+
+	_, err = authv1.NewAuthServiceClient(connection).ExchangeGoogleIdToken(context.Background(), &authv1.ExchangeGoogleIdTokenRequest{
+		IdToken: "some-token", Audience: "jobdeck-job-api",
+	})
+	require.Equal(t, codes.Unimplemented, status.Code(err))
 }

@@ -11,15 +11,10 @@ container-build:
 		. \
 	;
 
-.PHONY: auth-proxy-build
-auth-proxy-build:
+.PHONY: auth-server-integration-test
+auth-server-integration-test:
 	@cd $(CONTAINER_MK_DIR)../ \
-	&& docker build -t jobdeck-auth-proxy:test ./containers/auth-proxy
+	&& AUTH_IMAGE=jobdeck-auth:test sh ./tests/auth-server/run.sh
 
-.PHONY: auth-proxy-integration-test
-auth-proxy-integration-test:
-	@cd $(CONTAINER_MK_DIR)../ \
-	&& AUTH_IMAGE=jobdeck-auth:test AUTH_PROXY_IMAGE=jobdeck-auth-proxy:test sh ./tests/auth-proxy/run.sh
-
-.PHONY: auth-proxy-build-and-test
-auth-proxy-build-and-test: container-build auth-proxy-build auth-proxy-integration-test
+.PHONY: auth-server-build-and-test
+auth-server-build-and-test: container-build auth-server-integration-test
