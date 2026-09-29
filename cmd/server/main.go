@@ -21,25 +21,21 @@ import (
 	"github.com/air-hand-org/jobdeck-auth/internal/transport"
 
 	jwksserver "github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/openapi/v1/jwks/server"
-	authv1 "github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/proto/v1"
 	"github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/proto/v1/authv1connect"
 
 	"buf.build/go/protovalidate"
 	"connectrpc.com/connect"
+	"connectrpc.com/grpchealth"
+	"connectrpc.com/grpcreflect"
 	"connectrpc.com/validate"
-	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/sync/errgroup"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/health"
-	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
-	"google.golang.org/grpc/reflection"
 
 	"github.com/exaring/otelpgx"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func runHealthCheck(ctx context.Context, h *health.Server, pool *pgxpool.Pool) {
+func runHealthCheck(ctx context.Context, checker *grpchealth.StaticChecker, pool *pgxpool.Pool) {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
@@ -48,11 +44,11 @@ func runHealthCheck(ctx context.Context, h *health.Server, pool *pgxpool.Pool) {
 		defer cancel()
 
 		if err := pool.Ping(pingCtx); err != nil {
-			h.SetServingStatus("", healthgrpc.HealthCheckResponse_NOT_SERVING)
+			checker.SetStatus("", grpchealth.StatusNotServing)
 			return
 		}
 
-		h.SetServingStatus("", healthgrpc.HealthCheckResponse_SERVING)
+		checker.SetStatus("", grpchealth.StatusServing)
 	}
 
 	check()
@@ -60,7 +56,7 @@ func runHealthCheck(ctx context.Context, h *health.Server, pool *pgxpool.Pool) {
 	for {
 		select {
 		case <-ctx.Done():
-			h.SetServingStatus("", healthgrpc.HealthCheckResponse_NOT_SERVING)
+			checker.SetStatus("", grpchealth.StatusNotServing)
 			return
 		case <-ticker.C:
 			check()
@@ -115,30 +111,33 @@ func main() {
 		log.Fatalf("failed to new proto validate %v", err)
 	}
 
-	// grpc-go serves health and reflection. Auth RPCs are served by Connect on
-	// the same HTTP/2 listener; registering its descriptor here exposes it to
-	// reflection clients.
-	s := grpc.NewServer(grpc.StatsHandler(otelgrpc.NewServerHandler()))
-	healthcheck := health.NewServer()
-	healthgrpc.RegisterHealthServer(s, healthcheck)
-	authv1.RegisterAuthServiceServer(s, &authv1.UnimplementedAuthServiceServer{})
+	healthcheck := grpchealth.NewStaticChecker()
+	healthcheck.SetStatus("", grpchealth.StatusNotServing)
 	authService := transport.NewAuthServiceHandler(
 		app.NewAuthUsecase(
 			store, issuer, secret.NewPHCBuilderFactory(),
 		),
 	)
-	if strings.EqualFold(os.Getenv("GRPC_REFLECTION_ENABLED"), "true") {
-		reflection.Register(s)
-	}
 	jwksController := jwksserver.NewDefaultAPIController(transport.NewJWKSService(issuer.PublicKey(), jwtKeyID))
 	mux := http.NewServeMux()
 	path, authHandler := authv1connect.NewAuthServiceHandler(authService,
 		connect.WithInterceptors(validate.NewInterceptor(validate.WithValidator(validator))),
 	)
 	mux.Handle(path, authHandler)
-	mux.Handle("/grpc.health.v1.Health/", s)
-	mux.Handle("/grpc.reflection.v1.ServerReflection/", s)
-	mux.Handle("/grpc.reflection.v1alpha.ServerReflection/", s)
+	path, healthHandler := grpchealth.NewHandler(healthcheck)
+	mux.Handle(path, healthHandler)
+	if strings.EqualFold(os.Getenv("GRPC_REFLECTION_ENABLED"), "true") {
+		reflector := grpcreflect.NewStaticReflector(
+			authv1connect.AuthServiceName,
+			grpchealth.HealthV1ServiceName,
+			grpcreflect.ReflectV1ServiceName,
+			grpcreflect.ReflectV1AlphaServiceName,
+		)
+		path, handler := grpcreflect.NewHandlerV1(reflector)
+		mux.Handle(path, handler)
+		path, handler = grpcreflect.NewHandlerV1Alpha(reflector)
+		mux.Handle(path, handler)
+	}
 	mux.Handle("/.well-known/", jwksserver.NewRouter(jwksController))
 	protocols := new(http.Protocols)
 	protocols.SetHTTP1(true)

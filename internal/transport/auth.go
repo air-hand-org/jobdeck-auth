@@ -36,6 +36,8 @@ func (s *AuthServiceHandler) AuthenticateLocalClient(ctx context.Context, req *a
 }
 
 // ExchangeGoogleIdToken is reserved for a future Google identity integration.
+//
+//nolint:revive // The protobuf-generated handler interface fixes this RPC method name.
 func (s *AuthServiceHandler) ExchangeGoogleIdToken(context.Context, *authv1.ExchangeGoogleIdTokenRequest) (*authv1.ExchangeGoogleIdTokenResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("ExchangeGoogleIdToken is not implemented"))
 }
