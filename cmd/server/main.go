@@ -120,12 +120,10 @@ func main() {
 	)
 	jwksController := jwksserver.NewDefaultAPIController(transport.NewJWKSService(issuer.PublicKey(), jwtKeyID))
 	mux := http.NewServeMux()
-	path, authHandler := authv1connect.NewAuthServiceHandler(authService,
+	mux.Handle(authv1connect.NewAuthServiceHandler(authService,
 		connect.WithInterceptors(validate.NewInterceptor(validate.WithValidator(validator))),
-	)
-	mux.Handle(path, authHandler)
-	path, healthHandler := grpchealth.NewHandler(healthcheck)
-	mux.Handle(path, healthHandler)
+	))
+	mux.Handle(grpchealth.NewHandler(healthcheck))
 	if strings.EqualFold(os.Getenv("GRPC_REFLECTION_ENABLED"), "true") {
 		reflector := grpcreflect.NewStaticReflector(
 			authv1connect.AuthServiceName,
@@ -133,10 +131,8 @@ func main() {
 			grpcreflect.ReflectV1ServiceName,
 			grpcreflect.ReflectV1AlphaServiceName,
 		)
-		path, handler := grpcreflect.NewHandlerV1(reflector)
-		mux.Handle(path, handler)
-		path, handler = grpcreflect.NewHandlerV1Alpha(reflector)
-		mux.Handle(path, handler)
+		mux.Handle(grpcreflect.NewHandlerV1(reflector))
+		mux.Handle(grpcreflect.NewHandlerV1Alpha(reflector))
 	}
 	mux.Handle("/", jwksserver.NewRouter(jwksController))
 	protocols := new(http.Protocols)
