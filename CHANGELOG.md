@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/air-hand-org/jobdeck-auth/compare/v1.2.0...v1.2.1) (2026-09-30)
+
+
+### Bug Fixes
+
+* replace auth Envoy proxy with Connect-Go ([#17](https://github.com/air-hand-org/jobdeck-auth/issues/17)) ([eb51a72](https://github.com/air-hand-org/jobdeck-auth/commit/eb51a726f4483d02e182aa872266aa28ff4504c7))
+
 ## [1.2.0](https://github.com/air-hand-org/jobdeck-auth/compare/v1.1.1...v1.2.0) (2026-09-18)
 
 
