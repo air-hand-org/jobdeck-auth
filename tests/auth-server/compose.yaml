@@ -1,0 +1,30 @@
+services:
+  postgres:
+    image: postgres:18.1-bookworm
+    environment:
+      POSTGRES_DB: auth_server_test
+      POSTGRES_PASSWORD: auth_server_test
+      POSTGRES_USER: auth_server_test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth_server_test -d auth_server_test"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+
+  auth:
+    image: ${AUTH_IMAGE:?AUTH_IMAGE must be set}
+    environment:
+      AUTH_JWT_KEY_ID: auth-server-integration-test
+      AUTH_JWT_PRIVATE_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+      PORT: "8080"
+      GRPC_REFLECTION_ENABLED: "true"
+      POSTGRESDB_URI: postgres://auth_server_test:auth_server_test@postgres:5432/auth_server_test?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1::8080"
+
+  grpcurl:
+    image: fullstorydev/grpcurl:v1.9.3
+    profiles: ["test"]

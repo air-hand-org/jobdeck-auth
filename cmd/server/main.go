@@ -1,4 +1,4 @@
-// Package main runs the auth gRPC server.
+// Package main runs the auth HTTP and RPC server.
 package main
 
 import (
@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -22,23 +21,21 @@ import (
 	"github.com/air-hand-org/jobdeck-auth/internal/transport"
 
 	jwksserver "github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/openapi/v1/jwks/server"
-	authv1 "github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/proto/v1"
+	"github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/proto/v1/authv1connect"
 
 	"buf.build/go/protovalidate"
-	protovalidate_middleware "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/protovalidate"
-	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"connectrpc.com/connect"
+	"connectrpc.com/grpchealth"
+	"connectrpc.com/grpcreflect"
+	"connectrpc.com/validate"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/sync/errgroup"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/health"
-	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
-	"google.golang.org/grpc/reflection"
 
 	"github.com/exaring/otelpgx"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func runHealthCheck(ctx context.Context, h *health.Server, pool *pgxpool.Pool) {
+func runHealthCheck(ctx context.Context, checker *grpchealth.StaticChecker, pool *pgxpool.Pool) {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
@@ -47,11 +44,11 @@ func runHealthCheck(ctx context.Context, h *health.Server, pool *pgxpool.Pool) {
 		defer cancel()
 
 		if err := pool.Ping(pingCtx); err != nil {
-			h.SetServingStatus("", healthgrpc.HealthCheckResponse_NOT_SERVING)
+			checker.SetStatus("", grpchealth.StatusNotServing)
 			return
 		}
 
-		h.SetServingStatus("", healthgrpc.HealthCheckResponse_SERVING)
+		checker.SetStatus("", grpchealth.StatusServing)
 	}
 
 	check()
@@ -59,7 +56,7 @@ func runHealthCheck(ctx context.Context, h *health.Server, pool *pgxpool.Pool) {
 	for {
 		select {
 		case <-ctx.Done():
-			h.SetServingStatus("", healthgrpc.HealthCheckResponse_NOT_SERVING)
+			checker.SetStatus("", grpchealth.StatusNotServing)
 			return
 		case <-ticker.C:
 			check()
@@ -71,13 +68,9 @@ func main() {
 	signalCtx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
-	grpcPort := os.Getenv("GRPC_PORT")
-	if grpcPort == "" {
-		grpcPort = "9091"
-	}
-	httpPort := os.Getenv("HTTP_PORT")
-	if httpPort == "" {
-		httpPort = "8080"
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
 	}
 
 	shutdownTelemetry, err := telemetry.Init(signalCtx, "auth")
@@ -118,26 +111,37 @@ func main() {
 		log.Fatalf("failed to new proto validate %v", err)
 	}
 
-	s := grpc.NewServer(
-		grpc.StatsHandler(otelgrpc.NewServerHandler()),
-		grpc.ChainUnaryInterceptor(
-			protovalidate_middleware.UnaryServerInterceptor(validator),
-		),
-	)
-	healthcheck := health.NewServer()
-	healthgrpc.RegisterHealthServer(s, healthcheck)
-	authv1.RegisterAuthServiceServer(s, transport.NewAuthServiceServer(
+	healthcheck := grpchealth.NewStaticChecker()
+	healthcheck.SetStatus("", grpchealth.StatusNotServing)
+	authService := transport.NewAuthServiceHandler(
 		app.NewAuthUsecase(
 			store, issuer, secret.NewPHCBuilderFactory(),
 		),
-	))
-	if strings.EqualFold(os.Getenv("GRPC_REFLECTION_ENABLED"), "true") {
-		reflection.Register(s)
-	}
+	)
 	jwksController := jwksserver.NewDefaultAPIController(transport.NewJWKSService(issuer.PublicKey(), jwtKeyID))
+	mux := http.NewServeMux()
+	mux.Handle(authv1connect.NewAuthServiceHandler(authService,
+		connect.WithInterceptors(validate.NewInterceptor(validate.WithValidator(validator))),
+	))
+	mux.Handle(grpchealth.NewHandler(healthcheck))
+	if strings.EqualFold(os.Getenv("GRPC_REFLECTION_ENABLED"), "true") {
+		reflector := grpcreflect.NewStaticReflector(
+			authv1connect.AuthServiceName,
+			grpchealth.HealthV1ServiceName,
+			grpcreflect.ReflectV1ServiceName,
+			grpcreflect.ReflectV1AlphaServiceName,
+		)
+		mux.Handle(grpcreflect.NewHandlerV1(reflector))
+		mux.Handle(grpcreflect.NewHandlerV1Alpha(reflector))
+	}
+	mux.Handle("/", jwksserver.NewRouter(jwksController))
+	protocols := new(http.Protocols)
+	protocols.SetHTTP1(true)
+	protocols.SetUnencryptedHTTP2(true)
 	httpServer := &http.Server{
-		Addr:              fmt.Sprintf(":%s", httpPort),
-		Handler:           otelhttp.NewHandler(jwksserver.NewRouter(jwksController), "jwks"),
+		Addr:              fmt.Sprintf(":%s", port),
+		Handler:           otelhttp.NewHandler(mux, "auth"),
+		Protocols:         protocols,
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
@@ -157,22 +161,9 @@ func main() {
 
 	g.Go(func() error {
 		<-ctx.Done()
-		s.GracefulStop()
-
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		return httpServer.Shutdown(shutdownCtx)
-	})
-
-	g.Go(func() error {
-		lis, err := net.Listen("tcp", fmt.Sprintf(":%s", grpcPort))
-		if err != nil {
-			return err
-		}
-		if err := s.Serve(lis); err != nil {
-			return err
-		}
-		return nil
 	})
 
 	if err := g.Wait(); err != nil {
