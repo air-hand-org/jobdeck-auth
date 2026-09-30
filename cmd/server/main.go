@@ -138,7 +138,7 @@ func main() {
 		path, handler = grpcreflect.NewHandlerV1Alpha(reflector)
 		mux.Handle(path, handler)
 	}
-	mux.Handle("/.well-known/", jwksserver.NewRouter(jwksController))
+	mux.Handle("/", jwksserver.NewRouter(jwksController))
 	protocols := new(http.Protocols)
 	protocols.SetHTTP1(true)
 	protocols.SetUnencryptedHTTP2(true)
