@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/air-hand-org/jobdeck-auth/compare/v1.2.1...v1.2.2) (2026-10-21)
+
+
+### Bug Fixes
+
+* package application and dependency licenses ([#19](https://github.com/air-hand-org/jobdeck-auth/issues/19)) ([13f4d86](https://github.com/air-hand-org/jobdeck-auth/commit/13f4d862415e06d1c1ae92cc3c5475efa3ab281e))
+
 ## [1.2.1](https://github.com/air-hand-org/jobdeck-auth/compare/v1.2.0...v1.2.1) (2026-09-30)
 
 
