@@ -6,7 +6,7 @@ require (
 	buf.build/go/protovalidate v1.2.0
 	connectrpc.com/connect v1.20.0
 	connectrpc.com/grpchealth v1.5.0
-	connectrpc.com/grpcreflect v1.3.0
+	connectrpc.com/grpcreflect v1.3.1
 	connectrpc.com/validate v0.6.0
 	github.com/air-hand-org/api-contracts/packages/jobdeck/auth v1.3.2
 	github.com/cockroachdb/errors v1.14.0
