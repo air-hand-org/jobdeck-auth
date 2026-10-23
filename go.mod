@@ -1,6 +1,6 @@
 module github.com/air-hand-org/jobdeck-auth
 
-go 1.26.4
+go 1.27.3
 
 require (
 	buf.build/go/protovalidate v1.2.0
