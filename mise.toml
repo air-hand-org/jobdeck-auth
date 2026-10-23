@@ -6,6 +6,3 @@ watchexec = "2.5.1"
 
 [env]
 GOWORK = "off"
-GITHUB_ACTOR = {
-    default = '''{{ exec(command="gh auth status --hostname github.com --json hosts --jq '.hosts[][] | select(.active) | .login'") }}''',
-}
