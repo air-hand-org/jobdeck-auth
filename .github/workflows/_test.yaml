@@ -16,7 +16,7 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: air-hand-org/jobdeck-actions/actions/setup-tools@043b9c976fcffb56f76fabb18b67e36295a51ae9 # v1.3.0
