@@ -15,39 +15,22 @@ jobs:
     permissions:
       contents: read
     runs-on: ubuntu-latest
+    env:
+      ARTIFACT_ELIGIBLE: ${{ github.event_name == 'pull_request' && github.event.pull_request.user.login == 'renovate[bot]' && github.event.pull_request.head.repo.full_name == github.repository }}
     steps:
-      - name: determine artifact eligibility and checkout
-        id: eligibility
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
-          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: |
-          case "$EVENT_NAME:$PR_AUTHOR:$HEAD_REPO" in
-            "pull_request:renovate[bot]:$GITHUB_REPOSITORY")
-              printf 'eligible=true\nref=%s\n' "$HEAD_SHA" >> "$GITHUB_OUTPUT"
-              ;;
-            *)
-              printf 'eligible=false\nref=%s\n' "$GITHUB_SHA" >> "$GITHUB_OUTPUT"
-              ;;
-          esac
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           # Generate from the actual PR head, never its synthetic merge commit.
-          ref: ${{ steps.eligibility.outputs.ref }}
+          ref: ${{ case(env.ARTIFACT_ELIGIBLE == 'true', github.event.pull_request.head.sha, github.sha) }}
       - uses: air-hand-org/jobdeck-actions/actions/setup-tools@e5aa60360a796502ea0b51616eafdd097c9f731b # v1.5.3
       - uses: air-hand-org/jobdeck-actions/actions/cache-go@e5aa60360a796502ea0b51616eafdd097c9f731b # v1.5.3
       - name: build
         run: make build
-      - name: format Renovate generated output
-        if: steps.eligibility.outputs.eligible == 'true'
-        run: make fmt
       - name: validate generated changes
         id: generated
         env:
-          ELIGIBLE: ${{ steps.eligibility.outputs.eligible }}
+          ELIGIBLE: ${{ env.ARTIFACT_ELIGIBLE }}
           EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
         run: bash .github/scripts/generated-artifacts.sh
       - name: create push-only App token

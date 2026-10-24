@@ -1,40 +1,20 @@
 import os
 from pathlib import Path
 import subprocess
-import textwrap
 
 import pytest
 
 SCRIPT = Path(__file__).with_name('generated-artifacts.sh')
 
 
-@pytest.mark.parametrize('event,author,head_repo,eligible', [
-    ('pull_request', 'renovate[bot]', 'air-hand-org/jobdeck-auth', True),
-    ('pull_request', 'human', 'air-hand-org/jobdeck-auth', False),
-    ('pull_request', 'renovate[bot]', 'fork/jobdeck-auth', False),
-    ('push', 'renovate[bot]', 'air-hand-org/jobdeck-auth', False),
-    ('merge_group', '', '', False),
-    ('pull_request_target', 'renovate[bot]', 'air-hand-org/jobdeck-auth', False),
-])
-def test_workflow_eligibility_and_checkout(tmp_path, event, author, head_repo, eligible):
-    workflow = Path(__file__).parents[1] / 'workflows/_test.yaml'
-    source = workflow.read_text()
-    step = source.split('        id: eligibility\n', 1)[1].split('      - uses: actions/checkout@', 1)[0]
-    shell = textwrap.dedent(step.split('        run: |\n', 1)[1])
-    output = tmp_path / 'outputs'
-    result = subprocess.run(['bash', '-euo', 'pipefail', '-c', shell], env=dict(
-        os.environ, EVENT_NAME=event, PR_AUTHOR=author, HEAD_REPO=head_repo,
-        GITHUB_REPOSITORY='air-hand-org/jobdeck-auth', HEAD_SHA='actual-head',
-        GITHUB_SHA='event-sha', GITHUB_OUTPUT=str(output),
-    ), capture_output=True, text=True)
-    assert result.returncode == 0, result.stderr
-    assert dict(line.split('=', 1) for line in output.read_text().splitlines()) == {
-        'eligible': str(eligible).lower(), 'ref': 'actual-head' if eligible else 'event-sha',
-    }
-    assert 'ref: ${{ steps.eligibility.outputs.ref }}' in source
-    assert "if: steps.eligibility.outputs.eligible == 'true'" in source
-    assert 'ELIGIBLE: ${{ steps.eligibility.outputs.eligible }}' in source
+def test_workflow_wiring():
+    source = (Path(__file__).parents[1] / 'workflows/_test.yaml').read_text()
+    assert "ARTIFACT_ELIGIBLE: ${{ github.event_name == 'pull_request' && github.event.pull_request.user.login == 'renovate[bot]' && github.event.pull_request.head.repo.full_name == github.repository }}" in source
+    assert "ref: ${{ case(env.ARTIFACT_ELIGIBLE == 'true', github.event.pull_request.head.sha, github.sha) }}" in source
+    assert 'ELIGIBLE: ${{ env.ARTIFACT_ELIGIBLE }}' in source
     assert 'APP_SLUG: ${{ steps.app-token.outputs.app-slug }}' in source
+    assert 'make fmt' not in source
+    assert 'run: make lint' in source
 
 
 def git(root, *args):
