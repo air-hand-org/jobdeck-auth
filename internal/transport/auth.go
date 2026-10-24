@@ -10,7 +10,7 @@ import (
 	authv1 "github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/proto/v1"
 	"github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/proto/v1/authv1connect"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
 )
 
 // AuthServiceHandler exposes the auth use case over Connect, gRPC, and gRPC-Web.

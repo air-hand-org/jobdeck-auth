@@ -11,7 +11,7 @@ import (
 	"github.com/air-hand-org/jobdeck-auth/internal/domain"
 	"github.com/air-hand-org/jobdeck-auth/internal/secret"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
 	"connectrpc.com/validate"
 	authv1 "github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/proto/v1"
 	"github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/proto/v1/authv1connect"
