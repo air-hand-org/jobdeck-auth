@@ -34,6 +34,9 @@ check-clean:
 	@git status --short
 	@test -z "$$(git status --porcelain)"
 
-.PHONY: test
-test:
+.PHONY: test test-artifact-automation
+test: test-artifact-automation
 	@go test -cover ./...
+
+test-artifact-automation:
+	@shellspec
