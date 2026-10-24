@@ -19,13 +19,45 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # Generate from the actual PR head, never its synthetic merge commit.
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.user.login == 'renovate[bot]' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.sha || github.sha }}
       - uses: air-hand-org/jobdeck-actions/actions/setup-tools@e5aa60360a796502ea0b51616eafdd097c9f731b # v1.5.3
       - uses: air-hand-org/jobdeck-actions/actions/cache-go@e5aa60360a796502ea0b51616eafdd097c9f731b # v1.5.3
       - name: build
         run: make build
+      - name: format Renovate generated output
+        if: github.event_name == 'pull_request' && github.event.pull_request.user.login == 'renovate[bot]' && github.event.pull_request.head.repo.full_name == github.repository
+        run: make fmt
+      - name: validate generated changes
+        id: generated
+        env:
+          ELIGIBLE: ${{ github.event_name == 'pull_request' && github.event.pull_request.user.login == 'renovate[bot]' && github.event.pull_request.head.repo.full_name == github.repository }}
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: bash .github/scripts/generated-artifacts.sh
+      - name: create push-only App token
+        if: steps.generated.outputs.push == 'true'
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.GH_APP_RELEASE_CLIENT_ID }}
+          private-key: ${{ secrets.GH_APP_RELEASE_PRIVATE_KEY }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+      - name: push regenerated artifacts and fail this run
+        if: steps.generated.outputs.push == 'true'
+        env:
+          PUSH_TOKEN: ${{ steps.app-token.outputs.token }}
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+          HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: bash .github/scripts/push-generated-artifacts.sh
       - name: lint
         run: make lint
       - name: check clean
         run: make check-clean
+      - name: test artifact automation
+        run: |
+          python3 -m venv "$RUNNER_TEMP/artifact-tests"
+          "$RUNNER_TEMP/artifact-tests/bin/pip" install pytest==8.4.2
+          PYTHONDONTWRITEBYTECODE=1 "$RUNNER_TEMP/artifact-tests/bin/python" -m pytest -p no:cacheprovider .github/scripts/test-generated-artifacts.py
       - name: test
         run: make test
