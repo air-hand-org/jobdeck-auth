@@ -18,14 +18,12 @@ if [[ $(git log -1 --format=%s) == 'chore: regenerate Renovate artifacts' ]]; th
 fi
 for path in "${paths[@]}"; do
   case "$path" in
-    go.mod|go.sum|internal/repository/gen/auth.sql.go|internal/repository/gen/db.go|internal/repository/gen/models.go|internal/repository/gen/querier.go|internal/app/gen_auth_repository_moq_test.go|internal/app/gen_auth_store_moq_test.go|internal/app/gen_token_issuer_moq_test.go|third_party/licenses/linux-amd64/*) ;;
+    third_party/licenses/linux-amd64/*) ;;
     *) printf 'Unexpected generated change: %q\n' "$path" >&2; exit 1 ;;
   esac
 done
 # Validate every path before staging anything; never stage the entire tree.
 git add -- "${paths[@]}"
-git -c user.name='jobdeck automation' -c user.email='jobdeck-automation@users.noreply.github.com' \
-  commit -m 'chore: regenerate Renovate artifacts'
 printf 'push=true\n'
 if [[ -n ${GITHUB_OUTPUT:-} ]]; then
   printf 'push=true\n' >> "$GITHUB_OUTPUT"
