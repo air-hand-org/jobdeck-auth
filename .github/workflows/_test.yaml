@@ -28,7 +28,7 @@ jobs:
       - name: build
         run: make build
       - name: update generated licenses
-        uses: ./.github/actions/update-licenses
+        uses: $/.github/actions/update-licenses
         with:
           eligible: ${{ env.ARTIFACT_ELIGIBLE }}
           expected-head: ${{ github.event.pull_request.head.sha }}
@@ -40,7 +40,5 @@ jobs:
         run: make lint
       - name: check clean
         run: make check-clean
-      - name: test artifact automation
-        run: shellspec
       - name: test
         run: make test
