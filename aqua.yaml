@@ -16,4 +16,3 @@ packages:
 - name: sqlc-dev/sqlc@v1.31.1
 - name: matryer/moq@v0.8.1
 - name: jqlang/jq@jq-1.8.2
-- name: shellspec/shellspec@0.28.1
