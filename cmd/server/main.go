@@ -25,7 +25,7 @@ import (
 
 	"buf.build/go/protovalidate"
 	"connectrpc.com/connect"
-	"connectrpc.com/grpchealth"
+	"connectrpc.com/grpchealth/v2"
 	"connectrpc.com/grpcreflect"
 	"connectrpc.com/validate"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
