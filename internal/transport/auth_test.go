@@ -11,7 +11,8 @@ import (
 	"github.com/air-hand-org/jobdeck-auth/internal/domain"
 	"github.com/air-hand-org/jobdeck-auth/internal/secret"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
+	"connectrpc.com/connect/v2/connecthttp"
 	"connectrpc.com/validate"
 	authv1 "github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/proto/v1"
 	"github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/proto/v1/authv1connect"
@@ -65,10 +66,10 @@ func TestAuthServiceHandlerProtocols(t *testing.T) {
 		factory,
 	)
 
-	path, handler := authv1connect.NewAuthServiceHandler(NewAuthServiceHandler(usecase),
-		connect.WithInterceptors(validate.NewInterceptor()))
+	connectServer := connect.NewServer(validate.NewServerInterceptor())
+	authv1connect.RegisterAuthServiceHandler(connectServer, NewAuthServiceHandler(usecase))
 	mux := http.NewServeMux()
-	mux.Handle(path, handler)
+	connecthttp.Mount(mux, connectServer)
 	server := httptest.NewUnstartedServer(mux)
 	server.EnableHTTP2 = true
 	server.StartTLS()
@@ -77,7 +78,7 @@ func TestAuthServiceHandlerProtocols(t *testing.T) {
 	request := &authv1.AuthenticateLocalClientRequest{
 		ClientId: "worker", ClientSecret: "secret", Audience: "jobdeck-job-api",
 	}
-	connectClient := authv1connect.NewAuthServiceClient(server.Client(), server.URL)
+	connectClient := authv1connect.NewAuthServiceClient(connect.NewClient(connecthttp.NewTransport(server.Client(), server.URL)))
 	response, err := connectClient.AuthenticateLocalClient(context.Background(), request)
 	require.NoError(t, err)
 	require.Equal(t, "token", response.GetToken().GetAccessToken())
