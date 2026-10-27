@@ -24,9 +24,10 @@ import (
 	"github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/proto/v1/authv1connect"
 
 	"buf.build/go/protovalidate"
-	"connectrpc.com/connect"
-	"connectrpc.com/grpchealth"
-	"connectrpc.com/grpcreflect"
+	"connectrpc.com/connect/v2"
+	"connectrpc.com/connect/v2/connecthttp"
+	"connectrpc.com/grpchealth/v2"
+	"connectrpc.com/grpcreflect/v2"
 	"connectrpc.com/validate"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/sync/errgroup"
@@ -111,30 +112,40 @@ func main() {
 		log.Fatalf("failed to new proto validate %v", err)
 	}
 
-	healthcheck := grpchealth.NewStaticChecker()
-	healthcheck.SetStatus("", grpchealth.StatusNotServing)
+	jwksController := jwksserver.NewDefaultAPIController(transport.NewJWKSService(issuer.PublicKey(), jwtKeyID))
+	mux := http.NewServeMux()
+	mux.Handle("/", jwksserver.NewRouter(jwksController))
+
 	authService := transport.NewAuthServiceHandler(
 		app.NewAuthUsecase(
 			store, issuer, secret.NewPHCBuilderFactory(),
 		),
 	)
-	jwksController := jwksserver.NewDefaultAPIController(transport.NewJWKSService(issuer.PublicKey(), jwtKeyID))
-	mux := http.NewServeMux()
-	mux.Handle(authv1connect.NewAuthServiceHandler(authService,
-		connect.WithInterceptors(validate.NewInterceptor(validate.WithValidator(validator))),
-	))
-	mux.Handle(grpchealth.NewHandler(healthcheck))
+	server := connect.NewServer(
+		validate.NewServerInterceptor(validate.WithValidator(validator)),
+	)
+	authv1connect.RegisterAuthServiceHandler(server, authService)
+
+	statusServer := connect.NewServer()
+	healthcheck := grpchealth.NewStaticChecker()
+	healthcheck.SetStatus("", grpchealth.StatusNotServing)
+	grpchealth.Register(statusServer, healthcheck)
 	if strings.EqualFold(os.Getenv("GRPC_REFLECTION_ENABLED"), "true") {
-		reflector := grpcreflect.NewStaticReflector(
-			authv1connect.AuthServiceName,
-			grpchealth.HealthV1ServiceName,
-			grpcreflect.ReflectV1ServiceName,
-			grpcreflect.ReflectV1AlphaServiceName,
+		grpcreflect.Register(
+			statusServer,
+			grpcreflect.WithNamer(grpcreflect.NamerFunc(func() []string {
+				return []string{
+					authv1connect.AuthServiceName,
+					grpchealth.HealthV1ServiceName,
+					grpcreflect.ReflectV1ServiceName,
+					grpcreflect.ReflectV1AlphaServiceName,
+				}
+			})),
 		)
-		mux.Handle(grpcreflect.NewHandlerV1(reflector))
-		mux.Handle(grpcreflect.NewHandlerV1Alpha(reflector))
 	}
-	mux.Handle("/", jwksserver.NewRouter(jwksController))
+	connecthttp.Mount(mux, server)
+	connecthttp.Mount(mux, statusServer)
+
 	protocols := new(http.Protocols)
 	protocols.SetHTTP1(true)
 	protocols.SetUnencryptedHTTP2(true)

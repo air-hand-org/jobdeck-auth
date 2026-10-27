@@ -4,11 +4,11 @@ go 1.27.3
 
 require (
 	buf.build/go/protovalidate v1.4.0
-	connectrpc.com/connect v1.21.1
-	connectrpc.com/grpchealth v1.5.0
-	connectrpc.com/grpcreflect v1.3.1
+	connectrpc.com/connect/v2 v2.0.2
+	connectrpc.com/grpchealth/v2 v2.0.0
+	connectrpc.com/grpcreflect/v2 v2.0.0
 	connectrpc.com/validate v0.9.0
-	github.com/air-hand-org/api-contracts/packages/jobdeck/auth v1.3.3
+	github.com/air-hand-org/api-contracts/packages/jobdeck/auth v1.4.0
 	github.com/cockroachdb/errors v1.14.0
 	github.com/exaring/otelpgx v0.13.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
@@ -31,7 +31,7 @@ require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.12-20260825204119-511051f7f437.2 // indirect
 	cel.dev/cel-go v0.32.0 // indirect
 	cel.dev/expr v0.25.3 // indirect
-	connectrpc.com/connect/v2 v2.0.0 // indirect
+	connectrpc.com/connect v1.21.1 // indirect
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20261006220739-8c912ac31dd4 // indirect
 	github.com/Microsoft/go-winio v0.6.3 // indirect
