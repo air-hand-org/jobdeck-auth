@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.5](https://github.com/air-hand-org/jobdeck-auth/compare/v1.2.4...v1.2.5) (2026-10-27)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/air-hand-org/api-contracts/packages/jobdeck/auth to v1.4.1 ([#69](https://github.com/air-hand-org/jobdeck-auth/issues/69)) ([d16e130](https://github.com/air-hand-org/jobdeck-auth/commit/d16e13088903af0db3402ad978383ca71b58fe9a))
+
 ## [1.2.4](https://github.com/air-hand-org/jobdeck-auth/compare/v1.2.3...v1.2.4) (2026-10-27)
 
 
