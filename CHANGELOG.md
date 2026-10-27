@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.2.4](https://github.com/air-hand-org/jobdeck-auth/compare/v1.2.3...v1.2.4) (2026-10-27)
+
+
+### Bug Fixes
+
+* **deps:** update module buf.build/go/protovalidate to v1.4.0 ([#46](https://github.com/air-hand-org/jobdeck-auth/issues/46)) ([8026037](https://github.com/air-hand-org/jobdeck-auth/commit/8026037218713126400b77834982d756637c5eb2))
+* **deps:** update module connectrpc.com/grpcreflect to v1.3.1 ([#29](https://github.com/air-hand-org/jobdeck-auth/issues/29)) ([ef87c6b](https://github.com/air-hand-org/jobdeck-auth/commit/ef87c6ba5dd80b079665e5e8f740ba74de815aeb))
+* **deps:** update module connectrpc.com/validate to v0.9.0 ([#48](https://github.com/air-hand-org/jobdeck-auth/issues/48)) ([c91ea33](https://github.com/air-hand-org/jobdeck-auth/commit/c91ea33e962548fad9c9e376399175cc0fdb028d))
+* **deps:** update module github.com/air-hand-org/api-contracts/packages/jobdeck/auth to v1.4.0 ([#66](https://github.com/air-hand-org/jobdeck-auth/issues/66)) ([ee4a451](https://github.com/air-hand-org/jobdeck-auth/commit/ee4a451dbfefe1cb044d349475ff6bc77ab9c1a4))
+* **deps:** update module github.com/pressly/goose/v3 to v3.29.0 ([#45](https://github.com/air-hand-org/jobdeck-auth/issues/45)) ([8d477a3](https://github.com/air-hand-org/jobdeck-auth/commit/8d477a3d49ea260b675554a559d4b94cfa7f4954))
+* **deps:** update module go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp to v0.72.0 ([#52](https://github.com/air-hand-org/jobdeck-auth/issues/52)) ([56f9512](https://github.com/air-hand-org/jobdeck-auth/commit/56f9512fd638469d747755201bd6cb27b616365a))
+* **deps:** update module go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc to v1.47.0 ([#55](https://github.com/air-hand-org/jobdeck-auth/issues/55)) ([d8b4f99](https://github.com/air-hand-org/jobdeck-auth/commit/d8b4f99e97b0872ee11e27cf1cacf2e75f9923b7))
+* **renovate:** ignore license automation commit author ([#62](https://github.com/air-hand-org/jobdeck-auth/issues/62)) ([7390967](https://github.com/air-hand-org/jobdeck-auth/commit/739096791662a47a5039527fe101293858a6dd28))
+
 ## [1.2.3](https://github.com/air-hand-org/jobdeck-auth/compare/v1.2.2...v1.2.3) (2026-10-24)
 
 
