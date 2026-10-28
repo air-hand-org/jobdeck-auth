@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/air-hand-org/jobdeck-auth/compare/v1.2.5...v1.3.0) (2026-10-28)
+
+
+### Features
+
+* generate auth schema documentation and publish Liam ERD ([#72](https://github.com/air-hand-org/jobdeck-auth/issues/72)) ([52895ff](https://github.com/air-hand-org/jobdeck-auth/commit/52895ff2db079f3897c81eb2418a932b416ed780))
+
 ## [1.2.5](https://github.com/air-hand-org/jobdeck-auth/compare/v1.2.4...v1.2.5) (2026-10-27)
 
 
