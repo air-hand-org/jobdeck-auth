@@ -1,0 +1,578 @@
+{
+  "name": "jobdeck-auth",
+  "tables": [
+    {
+      "name": "auth.actor",
+      "type": "BASE TABLE",
+      "columns": [
+        {
+          "name": "active",
+          "type": "boolean",
+          "nullable": false,
+          "default": "true"
+        },
+        {
+          "name": "actor_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": "uuidv7()"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        },
+        {
+          "name": "name",
+          "type": "varchar(50)",
+          "nullable": false
+        },
+        {
+          "name": "type",
+          "type": "varchar(30)",
+          "nullable": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "actor_pkey",
+          "def": "CREATE UNIQUE INDEX actor_pkey ON auth.actor USING btree (actor_id)",
+          "table": "auth.actor",
+          "columns": [
+            "actor_id"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "actor_active_not_null",
+          "type": "n",
+          "def": "NOT NULL active",
+          "table": "auth.actor",
+          "referenced_table": "",
+          "columns": [
+            "active"
+          ]
+        },
+        {
+          "name": "actor_actor_id_not_null",
+          "type": "n",
+          "def": "NOT NULL actor_id",
+          "table": "auth.actor",
+          "referenced_table": "",
+          "columns": [
+            "actor_id"
+          ]
+        },
+        {
+          "name": "actor_created_at_not_null",
+          "type": "n",
+          "def": "NOT NULL created_at",
+          "table": "auth.actor",
+          "referenced_table": "",
+          "columns": [
+            "created_at"
+          ]
+        },
+        {
+          "name": "actor_name_not_null",
+          "type": "n",
+          "def": "NOT NULL name",
+          "table": "auth.actor",
+          "referenced_table": "",
+          "columns": [
+            "name"
+          ]
+        },
+        {
+          "name": "actor_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (actor_id)",
+          "table": "auth.actor",
+          "referenced_table": "",
+          "columns": [
+            "actor_id"
+          ]
+        },
+        {
+          "name": "actor_type_not_null",
+          "type": "n",
+          "def": "NOT NULL type",
+          "table": "auth.actor",
+          "referenced_table": "",
+          "columns": [
+            "type"
+          ]
+        },
+        {
+          "name": "actor_updated_at_not_null",
+          "type": "n",
+          "def": "NOT NULL updated_at",
+          "table": "auth.actor",
+          "referenced_table": "",
+          "columns": [
+            "updated_at"
+          ]
+        },
+        {
+          "name": "fk_type",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (type) REFERENCES auth.actor_type(type) ON UPDATE CASCADE",
+          "table": "auth.actor",
+          "referenced_table": "auth.actor_type",
+          "columns": [
+            "type"
+          ],
+          "referenced_columns": [
+            "type"
+          ]
+        }
+      ],
+      "triggers": [
+        {
+          "name": "actor_updated_at",
+          "def": "CREATE TRIGGER actor_updated_at BEFORE UPDATE ON auth.actor FOR EACH ROW EXECUTE FUNCTION auth.update_updated_at_column()"
+        }
+      ]
+    },
+    {
+      "name": "auth.actor_identity",
+      "type": "BASE TABLE",
+      "columns": [
+        {
+          "name": "actor_id",
+          "type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        },
+        {
+          "name": "issuer",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "subject",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "actor_identity_pkey",
+          "def": "CREATE UNIQUE INDEX actor_identity_pkey ON auth.actor_identity USING btree (actor_id)",
+          "table": "auth.actor_identity",
+          "columns": [
+            "actor_id"
+          ]
+        },
+        {
+          "name": "uq_issuer_subject",
+          "def": "CREATE UNIQUE INDEX uq_issuer_subject ON auth.actor_identity USING btree (issuer, subject)",
+          "table": "auth.actor_identity",
+          "columns": [
+            "issuer",
+            "subject"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "actor_identity_actor_id_not_null",
+          "type": "n",
+          "def": "NOT NULL actor_id",
+          "table": "auth.actor_identity",
+          "referenced_table": "",
+          "columns": [
+            "actor_id"
+          ]
+        },
+        {
+          "name": "actor_identity_created_at_not_null",
+          "type": "n",
+          "def": "NOT NULL created_at",
+          "table": "auth.actor_identity",
+          "referenced_table": "",
+          "columns": [
+            "created_at"
+          ]
+        },
+        {
+          "name": "actor_identity_issuer_not_null",
+          "type": "n",
+          "def": "NOT NULL issuer",
+          "table": "auth.actor_identity",
+          "referenced_table": "",
+          "columns": [
+            "issuer"
+          ]
+        },
+        {
+          "name": "actor_identity_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (actor_id)",
+          "table": "auth.actor_identity",
+          "referenced_table": "",
+          "columns": [
+            "actor_id"
+          ]
+        },
+        {
+          "name": "actor_identity_subject_not_null",
+          "type": "n",
+          "def": "NOT NULL subject",
+          "table": "auth.actor_identity",
+          "referenced_table": "",
+          "columns": [
+            "subject"
+          ]
+        },
+        {
+          "name": "actor_identity_updated_at_not_null",
+          "type": "n",
+          "def": "NOT NULL updated_at",
+          "table": "auth.actor_identity",
+          "referenced_table": "",
+          "columns": [
+            "updated_at"
+          ]
+        },
+        {
+          "name": "fk_actor_id",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (actor_id) REFERENCES auth.actor(actor_id) ON DELETE CASCADE",
+          "table": "auth.actor_identity",
+          "referenced_table": "auth.actor",
+          "columns": [
+            "actor_id"
+          ],
+          "referenced_columns": [
+            "actor_id"
+          ]
+        },
+        {
+          "name": "uq_issuer_subject",
+          "type": "UNIQUE",
+          "def": "UNIQUE (issuer, subject)",
+          "table": "auth.actor_identity",
+          "referenced_table": "",
+          "columns": [
+            "issuer",
+            "subject"
+          ]
+        }
+      ],
+      "triggers": [
+        {
+          "name": "actor_identity_updated_at",
+          "def": "CREATE TRIGGER actor_identity_updated_at BEFORE UPDATE ON auth.actor_identity FOR EACH ROW EXECUTE FUNCTION auth.update_updated_at_column()"
+        }
+      ]
+    },
+    {
+      "name": "auth.actor_type",
+      "type": "BASE TABLE",
+      "columns": [
+        {
+          "name": "type",
+          "type": "varchar(30)",
+          "nullable": false
+        }
+      ],
+      "indexes": [
+        {
+          "name": "actor_type_pkey",
+          "def": "CREATE UNIQUE INDEX actor_type_pkey ON auth.actor_type USING btree (type)",
+          "table": "auth.actor_type",
+          "columns": [
+            "type"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "actor_type_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (type)",
+          "table": "auth.actor_type",
+          "referenced_table": "",
+          "columns": [
+            "type"
+          ]
+        },
+        {
+          "name": "actor_type_type_not_null",
+          "type": "n",
+          "def": "NOT NULL type",
+          "table": "auth.actor_type",
+          "referenced_table": "",
+          "columns": [
+            "type"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "auth.local_auth_client_credential",
+      "type": "BASE TABLE",
+      "columns": [
+        {
+          "name": "actor_id",
+          "type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "client_id",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        },
+        {
+          "name": "secret_hash",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "local_auth_client_credential_pkey",
+          "def": "CREATE UNIQUE INDEX local_auth_client_credential_pkey ON auth.local_auth_client_credential USING btree (actor_id)",
+          "table": "auth.local_auth_client_credential",
+          "columns": [
+            "actor_id"
+          ]
+        },
+        {
+          "name": "uq_client_id",
+          "def": "CREATE UNIQUE INDEX uq_client_id ON auth.local_auth_client_credential USING btree (client_id)",
+          "table": "auth.local_auth_client_credential",
+          "columns": [
+            "client_id"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "fk_actor_id",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (actor_id) REFERENCES auth.actor(actor_id) ON DELETE CASCADE",
+          "table": "auth.local_auth_client_credential",
+          "referenced_table": "auth.actor",
+          "columns": [
+            "actor_id"
+          ],
+          "referenced_columns": [
+            "actor_id"
+          ]
+        },
+        {
+          "name": "local_auth_client_credential_actor_id_not_null",
+          "type": "n",
+          "def": "NOT NULL actor_id",
+          "table": "auth.local_auth_client_credential",
+          "referenced_table": "",
+          "columns": [
+            "actor_id"
+          ]
+        },
+        {
+          "name": "local_auth_client_credential_client_id_not_null",
+          "type": "n",
+          "def": "NOT NULL client_id",
+          "table": "auth.local_auth_client_credential",
+          "referenced_table": "",
+          "columns": [
+            "client_id"
+          ]
+        },
+        {
+          "name": "local_auth_client_credential_created_at_not_null",
+          "type": "n",
+          "def": "NOT NULL created_at",
+          "table": "auth.local_auth_client_credential",
+          "referenced_table": "",
+          "columns": [
+            "created_at"
+          ]
+        },
+        {
+          "name": "local_auth_client_credential_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (actor_id)",
+          "table": "auth.local_auth_client_credential",
+          "referenced_table": "",
+          "columns": [
+            "actor_id"
+          ]
+        },
+        {
+          "name": "local_auth_client_credential_secret_hash_not_null",
+          "type": "n",
+          "def": "NOT NULL secret_hash",
+          "table": "auth.local_auth_client_credential",
+          "referenced_table": "",
+          "columns": [
+            "secret_hash"
+          ]
+        },
+        {
+          "name": "local_auth_client_credential_updated_at_not_null",
+          "type": "n",
+          "def": "NOT NULL updated_at",
+          "table": "auth.local_auth_client_credential",
+          "referenced_table": "",
+          "columns": [
+            "updated_at"
+          ]
+        },
+        {
+          "name": "uq_client_id",
+          "type": "UNIQUE",
+          "def": "UNIQUE (client_id)",
+          "table": "auth.local_auth_client_credential",
+          "referenced_table": "",
+          "columns": [
+            "client_id"
+          ]
+        }
+      ],
+      "triggers": [
+        {
+          "name": "local_auth_client_credential_updated_at",
+          "def": "CREATE TRIGGER local_auth_client_credential_updated_at BEFORE UPDATE ON auth.local_auth_client_credential FOR EACH ROW EXECUTE FUNCTION auth.update_updated_at_column()"
+        }
+      ]
+    },
+    {
+      "name": "auth.local_auth_client_detail",
+      "type": "VIEW",
+      "columns": [
+        {
+          "name": "active",
+          "type": "boolean",
+          "nullable": true
+        },
+        {
+          "name": "actor_id",
+          "type": "uuid",
+          "nullable": true
+        },
+        {
+          "name": "client_id",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "name",
+          "type": "varchar(50)",
+          "nullable": true
+        },
+        {
+          "name": "secret_hash",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "type",
+          "type": "varchar(30)",
+          "nullable": true
+        }
+      ],
+      "def": "CREATE VIEW local_auth_client_detail AS (\n SELECT c.actor_id,\n    c.client_id,\n    c.secret_hash,\n    a.name,\n    a.type,\n    a.active\n   FROM (auth.local_auth_client_credential c\n     JOIN auth.actor a USING (actor_id))\n)",
+      "referenced_tables": [
+        "auth.local_auth_client_credential",
+        "auth.actor"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "table": "auth.actor",
+      "columns": [
+        "type"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "auth.actor_type",
+      "parent_columns": [
+        "type"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (type) REFERENCES auth.actor_type(type) ON UPDATE CASCADE"
+    },
+    {
+      "table": "auth.actor_identity",
+      "columns": [
+        "actor_id"
+      ],
+      "cardinality": "zero_or_one",
+      "parent_table": "auth.actor",
+      "parent_columns": [
+        "actor_id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (actor_id) REFERENCES auth.actor(actor_id) ON DELETE CASCADE"
+    },
+    {
+      "table": "auth.local_auth_client_credential",
+      "columns": [
+        "actor_id"
+      ],
+      "cardinality": "zero_or_one",
+      "parent_table": "auth.actor",
+      "parent_columns": [
+        "actor_id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (actor_id) REFERENCES auth.actor(actor_id) ON DELETE CASCADE"
+    }
+  ],
+  "functions": [
+    {
+      "name": "auth.update_updated_at_column",
+      "return_type": "trigger",
+      "arguments": "",
+      "type": "FUNCTION"
+    }
+  ],
+  "driver": {
+    "name": "postgres",
+    "meta": {
+      "current_schema": "public",
+      "search_paths": [
+        "schema_docs",
+        "public"
+      ],
+      "dict": {
+        "Functions": "Stored procedures and functions"
+      }
+    }
+  }
+}

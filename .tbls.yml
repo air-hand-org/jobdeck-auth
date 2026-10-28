@@ -1,0 +1,8 @@
+name: jobdeck-auth
+docPath: docs/schema
+format:
+  sort: true
+er:
+  format: mermaid
+include:
+  - auth.*

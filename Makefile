@@ -37,3 +37,11 @@ check-clean:
 .PHONY: test
 test:
 	@go test -cover ./...
+
+.PHONY: schema-docs
+schema-docs:
+	@bash scripts/schema-docs.sh
+
+.PHONY: schema-erd
+schema-erd:
+	liam erd build --format tbls --input docs/schema/schema.json --output-dir tmp/schema-erd
