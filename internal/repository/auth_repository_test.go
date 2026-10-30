@@ -22,6 +22,15 @@ func (s authQuerierStub) UpdateLocalAuthClientSecretHash(context.Context, authdb
 	return s.updatedCount, nil
 }
 
+func (s authQuerierStub) GetMatchedActorIdentity(context.Context, authdb.GetMatchedActorIdentityParams) (authdb.AuthActor, error) {
+	return authdb.AuthActor{}, domain.ErrActorIdentityNotFound
+}
+
+func (s authQuerierStub) CreateActor(context.Context, authdb.CreateActorParams) (int64, error) {
+	return 0, nil
+}
+
+
 func TestAuthRepositoryUpdateLocalAuthClientSecretHashRequiresOneRow(t *testing.T) {
 	t.Parallel()
 

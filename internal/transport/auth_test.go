@@ -2,6 +2,7 @@ package transport
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -35,6 +36,10 @@ func (authRepositoryStub) UpdateLocalAuthClientSecretHash(context.Context, domai
 	return nil
 }
 
+func (authRepositoryStub) GetOrCreateActorByExternalIdentity(context.Context, domain.ExternalIdentity) (domain.Actor, error) {
+	return domain.Actor{}, errors.New("not found")
+}
+
 type authStoreStub struct {
 	repository app.AuthRepository
 }
@@ -51,19 +56,33 @@ func (tokenIssuerStub) Token(domain.ActorId, string, string, time.Time) (app.Acc
 	return app.AccessToken{Token: "token", TokenType: "Bearer", ExpiresInSec: 60}, nil
 }
 
+//go:generate moq -out gen_external_identity_resolver_moq_test.go -pkg transport ../app ExternalIdentityResolver
+//go:generate moq -out gen_external_identity_resolver_registry_moq_test.go -pkg transport ../app ExternalIdentityResolverRegistry
+
 func TestAuthServiceHandlerProtocols(t *testing.T) {
 	t.Parallel()
 
 	factory := secret.NewPHCBuilderFactory()
 	usecase := app.NewAuthUsecase(
-		authStoreStub{repository: authRepositoryStub{client: domain.LocalAuthClient{
-			ClientId:   "worker",
-			SecretHash: factory.NewBuilder([]byte("0123456789abcdef")).PHC([]byte("secret")).String(),
-			Type:       "SERVICE",
-			Active:     true,
-		}}},
+		authStoreStub{repository: authRepositoryStub{
+			client: domain.LocalAuthClient{
+				ClientId:   "worker",
+				SecretHash: factory.NewBuilder([]byte("0123456789abcdef")).PHC([]byte("secret")).String(),
+				Type:       "SERVICE",
+				Active:     true,
+			},
+		}},
 		tokenIssuerStub{},
 		factory,
+		&ExternalIdentityResolverRegistryMock{
+			GetFunc: func(app.ExternalProvider) (app.ExternalIdentityResolver, error) {
+				return &ExternalIdentityResolverMock{
+					ResolveFunc: func(context.Context, string) (domain.ExternalIdentity, error) {
+						return domain.ExternalIdentity{}, errors.New("failed to resolve")
+					},
+				}, nil
+			},
+		},
 	)
 
 	connectServer := connect.NewServer(validate.NewServerInterceptor())
@@ -97,8 +116,10 @@ func TestAuthServiceHandlerProtocols(t *testing.T) {
 	})
 	require.Equal(t, codes.Unauthenticated, status.Code(err))
 
-	_, err = authv1.NewAuthServiceClient(connection).ExchangeGoogleIdToken(context.Background(), &authv1.ExchangeGoogleIdTokenRequest{
-		IdToken: "some-token", Audience: "jobdeck-job-api",
+	_, err = authv1.NewAuthServiceClient(connection).ExchangeExternalToken(context.Background(), &authv1.ExchangeExternalTokenRequest{
+		Provider: authv1.ExternalTokenProvider_EXTERNAL_TOKEN_PROVIDER_GITHUB,
+		Token: "this.is.external.identity.token",
+		Audience: "jobdeck-ui",
 	})
-	require.Equal(t, codes.Unimplemented, status.Code(err))
+	require.Equal(t, codes.Unauthenticated, status.Code(err))
 }

@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/air-hand-org/jobdeck-auth/internal/app"
+	"github.com/air-hand-org/jobdeck-auth/internal/external"
 	"github.com/air-hand-org/jobdeck-auth/internal/repository"
 	"github.com/air-hand-org/jobdeck-auth/internal/secret"
 	"github.com/air-hand-org/jobdeck-auth/internal/telemetry"
@@ -118,7 +119,10 @@ func main() {
 
 	authService := transport.NewAuthServiceHandler(
 		app.NewAuthUsecase(
-			store, issuer, secret.NewPHCBuilderFactory(),
+			store,
+			issuer,
+			secret.NewPHCBuilderFactory(),
+			external.NewExternalIdentityResolverRegistry(),
 		),
 	)
 	server := connect.NewServer(

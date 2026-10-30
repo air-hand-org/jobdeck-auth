@@ -15,6 +15,9 @@ import (
 type authQuerier interface {
 	GetMatchedLocalAuthClient(ctx context.Context, clientID string) (authdb.AuthLocalAuthClientDetail, error)
 	UpdateLocalAuthClientSecretHash(ctx context.Context, arg authdb.UpdateLocalAuthClientSecretHashParams) (int64, error)
+
+	CreateActor(ctx context.Context, arg authdb.CreateActorParams) (int64, error)
+	GetMatchedActorIdentity(ctx context.Context, arg authdb.GetMatchedActorIdentityParams) (authdb.AuthActor, error)
 }
 
 type authRepository struct {
@@ -46,6 +49,40 @@ func (r *authRepository) UpdateLocalAuthClientSecretHash(ctx context.Context, ac
 		return domain.ErrAuthClientNotFound
 	}
 	return nil
+}
+
+func (r *authRepository) GetOrCreateActorByExternalIdentity(ctx context.Context, identity domain.ExternalIdentity) (domain.Actor, error) {
+	row, err := r.q.GetMatchedActorIdentity(ctx, authdb.GetMatchedActorIdentityParams{
+		Issuer:  identity.Issuer,
+		Subject: identity.Subject,
+	})
+	if err != nil {
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return domain.Actor{}, err
+		}
+		// Create Actor if not found
+		createdCount, err := r.q.CreateActor(ctx, authdb.CreateActorParams{
+			Issuer:  identity.Issuer,
+			Subject: identity.Subject,
+			Name:    identity.Name,
+			Type:    "USER",
+		})
+		if err != nil {
+			return domain.Actor{}, err
+		}
+		if createdCount != 1 {
+			return domain.Actor{}, errors.New("failed to create actor")
+		}
+		row, err := r.q.GetMatchedActorIdentity(ctx, authdb.GetMatchedActorIdentityParams{
+			Issuer:  identity.Issuer,
+			Subject: identity.Subject,
+		})
+		if err != nil {
+			return domain.Actor{}, err
+		}
+		return actorFromDB(row), nil
+	}
+	return actorFromDB(row), nil
 }
 
 func newAuthRepository(q authQuerier) *authRepository {

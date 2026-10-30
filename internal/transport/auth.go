@@ -35,6 +35,20 @@ func (s *AuthServiceHandler) AuthenticateLocalClient(ctx context.Context, req *a
 	}, nil
 }
 
+func (s *AuthServiceHandler) ExchangeExternalToken(ctx context.Context, req *authv1.ExchangeExternalTokenRequest) (*authv1.ExchangeExternalTokenResponse, error) {
+	token, err := s.usecase.AuthenticateExternal(ctx, app.ExternalProvider(req.GetProvider().String()), req.GetToken(), req.GetAudience())
+	if err != nil {
+		return nil, connect.NewError(connect.CodeUnauthenticated, "failed to exchange external token").WithCause(err)
+	}
+	return &authv1.ExchangeExternalTokenResponse{
+		Token: &authv1.Token{
+			AccessToken:      token.Token,
+			TokenType:        token.TokenType,
+			ExpiresInSeconds: token.ExpiresInSec,
+		},
+	}, nil
+}
+
 // NewAuthServiceHandler creates an auth RPC handler.
 func NewAuthServiceHandler(usecase *app.AuthUsecase) *AuthServiceHandler {
 	return &AuthServiceHandler{
