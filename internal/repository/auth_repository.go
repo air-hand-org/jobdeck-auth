@@ -64,7 +64,6 @@ func (r *authRepository) GetOrCreateActorByExternalIdentity(ctx context.Context,
 		createdCount, err := r.q.CreateActor(ctx, authdb.CreateActorParams{
 			Issuer:  identity.Issuer,
 			Subject: identity.Subject,
-			Name:    identity.Name,
 			Type:    "USER",
 		})
 		if err != nil {

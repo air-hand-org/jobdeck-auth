@@ -34,7 +34,6 @@ func (r *githubResolver) Resolve(ctx context.Context, userAccessToken string) (d
 	return domain.ExternalIdentity{
 		Issuer:  r.issuer,
 		Subject: fmt.Sprintf("%d", user.GetID()),
-		Name:    user.GetName(),
 	}, nil
 }
 
