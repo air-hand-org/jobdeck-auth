@@ -22,6 +22,9 @@ var _ AuthRepository = &AuthRepositoryMock{}
 //			GetLocalAuthClientFunc: func(ctx context.Context, clientID string) (domain.LocalAuthClient, error) {
 //				panic("mock out the GetLocalAuthClient method")
 //			},
+//			GetOrCreateActorByExternalIdentityFunc: func(ctx context.Context, identity domain.ExternalIdentity) (domain.Actor, error) {
+//				panic("mock out the GetOrCreateActorByExternalIdentity method")
+//			},
 //			UpdateLocalAuthClientSecretHashFunc: func(ctx context.Context, actorID domain.ActorId, secretHash string) error {
 //				panic("mock out the UpdateLocalAuthClientSecretHash method")
 //			},
@@ -35,6 +38,9 @@ type AuthRepositoryMock struct {
 	// GetLocalAuthClientFunc mocks the GetLocalAuthClient method.
 	GetLocalAuthClientFunc func(ctx context.Context, clientID string) (domain.LocalAuthClient, error)
 
+	// GetOrCreateActorByExternalIdentityFunc mocks the GetOrCreateActorByExternalIdentity method.
+	GetOrCreateActorByExternalIdentityFunc func(ctx context.Context, identity domain.ExternalIdentity) (domain.Actor, error)
+
 	// UpdateLocalAuthClientSecretHashFunc mocks the UpdateLocalAuthClientSecretHash method.
 	UpdateLocalAuthClientSecretHashFunc func(ctx context.Context, actorID domain.ActorId, secretHash string) error
 
@@ -47,6 +53,13 @@ type AuthRepositoryMock struct {
 			// ClientID is the clientID argument value.
 			ClientID string
 		}
+		// GetOrCreateActorByExternalIdentity holds details about calls to the GetOrCreateActorByExternalIdentity method.
+		GetOrCreateActorByExternalIdentity []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Identity is the identity argument value.
+			Identity domain.ExternalIdentity
+		}
 		// UpdateLocalAuthClientSecretHash holds details about calls to the UpdateLocalAuthClientSecretHash method.
 		UpdateLocalAuthClientSecretHash []struct {
 			// Ctx is the ctx argument value.
@@ -57,8 +70,9 @@ type AuthRepositoryMock struct {
 			SecretHash string
 		}
 	}
-	lockGetLocalAuthClient              sync.RWMutex
-	lockUpdateLocalAuthClientSecretHash sync.RWMutex
+	lockGetLocalAuthClient                 sync.RWMutex
+	lockGetOrCreateActorByExternalIdentity sync.RWMutex
+	lockUpdateLocalAuthClientSecretHash    sync.RWMutex
 }
 
 // GetLocalAuthClient calls GetLocalAuthClientFunc.
@@ -94,6 +108,42 @@ func (mock *AuthRepositoryMock) GetLocalAuthClientCalls() []struct {
 	mock.lockGetLocalAuthClient.RLock()
 	calls = mock.calls.GetLocalAuthClient
 	mock.lockGetLocalAuthClient.RUnlock()
+	return calls
+}
+
+// GetOrCreateActorByExternalIdentity calls GetOrCreateActorByExternalIdentityFunc.
+func (mock *AuthRepositoryMock) GetOrCreateActorByExternalIdentity(ctx context.Context, identity domain.ExternalIdentity) (domain.Actor, error) {
+	if mock.GetOrCreateActorByExternalIdentityFunc == nil {
+		panic("AuthRepositoryMock.GetOrCreateActorByExternalIdentityFunc: method is nil but AuthRepository.GetOrCreateActorByExternalIdentity was just called")
+	}
+	callInfo := struct {
+		Ctx      context.Context
+		Identity domain.ExternalIdentity
+	}{
+		Ctx:      ctx,
+		Identity: identity,
+	}
+	mock.lockGetOrCreateActorByExternalIdentity.Lock()
+	mock.calls.GetOrCreateActorByExternalIdentity = append(mock.calls.GetOrCreateActorByExternalIdentity, callInfo)
+	mock.lockGetOrCreateActorByExternalIdentity.Unlock()
+	return mock.GetOrCreateActorByExternalIdentityFunc(ctx, identity)
+}
+
+// GetOrCreateActorByExternalIdentityCalls gets all the calls that were made to GetOrCreateActorByExternalIdentity.
+// Check the length with:
+//
+//	len(mockedAuthRepository.GetOrCreateActorByExternalIdentityCalls())
+func (mock *AuthRepositoryMock) GetOrCreateActorByExternalIdentityCalls() []struct {
+	Ctx      context.Context
+	Identity domain.ExternalIdentity
+} {
+	var calls []struct {
+		Ctx      context.Context
+		Identity domain.ExternalIdentity
+	}
+	mock.lockGetOrCreateActorByExternalIdentity.RLock()
+	calls = mock.calls.GetOrCreateActorByExternalIdentity
+	mock.lockGetOrCreateActorByExternalIdentity.RUnlock()
 	return calls
 }
 

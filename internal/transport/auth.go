@@ -5,6 +5,7 @@ import (
 	"context"
 
 	"github.com/air-hand-org/jobdeck-auth/internal/app"
+	"github.com/air-hand-org/jobdeck-auth/internal/transport/transform"
 
 	authv1 "github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/proto/v1"
 	"github.com/air-hand-org/api-contracts/packages/jobdeck/auth/go/proto/v1/authv1connect"
@@ -27,6 +28,24 @@ func (s *AuthServiceHandler) AuthenticateLocalClient(ctx context.Context, req *a
 		return nil, connect.NewError(connect.CodeUnauthenticated, "failed to authenticate").WithCause(err)
 	}
 	return &authv1.AuthenticateLocalClientResponse{
+		Token: &authv1.Token{
+			AccessToken:      token.Token,
+			TokenType:        token.TokenType,
+			ExpiresInSeconds: token.ExpiresInSec,
+		},
+	}, nil
+}
+
+func (s *AuthServiceHandler) ExchangeExternalToken(ctx context.Context, req *authv1.ExchangeExternalTokenRequest) (*authv1.ExchangeExternalTokenResponse, error) {
+	provider, err := transform.ExternalProviderFromProto(req.GetProvider())
+	if err != nil {
+		return nil, connect.NewError(connect.CodeUnauthenticated, "failed to transform external provider").WithCause(err)
+	}
+	token, err := s.usecase.AuthenticateExternal(ctx, provider, req.GetToken(), req.GetAudience())
+	if err != nil {
+		return nil, connect.NewError(connect.CodeUnauthenticated, "failed to exchange external token").WithCause(err)
+	}
+	return &authv1.ExchangeExternalTokenResponse{
 		Token: &authv1.Token{
 			AccessToken:      token.Token,
 			TokenType:        token.TokenType,
