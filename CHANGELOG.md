@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/air-hand-org/jobdeck-auth/compare/v1.3.0...v1.3.1) (2026-10-31)
+
+
+### Bug Fixes
+
+* **deps:** update module google.golang.org/grpc to v1.85.0 ([#81](https://github.com/air-hand-org/jobdeck-auth/issues/81)) ([94abf02](https://github.com/air-hand-org/jobdeck-auth/commit/94abf0204d016646f13be5d1a99b568c92445d83))
+
 ## [1.3.0](https://github.com/air-hand-org/jobdeck-auth/compare/v1.2.5...v1.3.0) (2026-10-28)
 
 
