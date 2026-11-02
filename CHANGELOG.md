@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/air-hand-org/jobdeck-auth/compare/v1.3.1...v1.4.0) (2026-11-02)
+
+
+### Features
+
+* exchange token with github ([#80](https://github.com/air-hand-org/jobdeck-auth/issues/80)) ([507b3c0](https://github.com/air-hand-org/jobdeck-auth/commit/507b3c0a1949c926a7a7862ba324792806328e6f))
+
 ## [1.3.1](https://github.com/air-hand-org/jobdeck-auth/compare/v1.3.0...v1.3.1) (2026-10-31)
 
 
