@@ -18,7 +18,7 @@ func (r *externalResolverRegistry) Get(provider app.ExternalProvider) (app.Exter
 	if resolver, ok := r.resolvers[provider]; ok {
 		return resolver, nil
 	}
-	return nil, fmt.Errorf("Provider [%s] is not supported", provider)
+	return nil, fmt.Errorf("provider [%s] is not supported", provider)
 }
 
 func NewExternalIdentityResolverRegistry() *externalResolverRegistry {

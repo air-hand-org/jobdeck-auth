@@ -15,8 +15,6 @@ import (
 )
 
 // AuthRepository persists authentication client data.
-//
-//go:generate moq -out gen_auth_repository_moq_test.go . AuthRepository
 type AuthRepository interface {
 	GetLocalAuthClient(ctx context.Context, clientID string) (domain.LocalAuthClient, error)
 	UpdateLocalAuthClientSecretHash(ctx context.Context, actorID domain.ActorId, secretHash string) error
@@ -24,8 +22,6 @@ type AuthRepository interface {
 }
 
 // AuthStore provides authentication repositories and transaction boundaries.
-//
-//go:generate moq -out gen_auth_store_moq_test.go . AuthStore
 type AuthStore interface {
 	Auths() AuthRepository
 	WithinAuthTx(ctx context.Context, fn func(ctx context.Context, auths AuthRepository) error) error
@@ -39,20 +35,16 @@ type AccessToken struct {
 }
 
 // TokenIssuer issues access tokens for actors.
-//
-//go:generate moq -out gen_token_issuer_moq_test.go . TokenIssuer
 type TokenIssuer interface {
 	Token(actorID domain.ActorId, actorType string, audience string, now time.Time) (AccessToken, error)
 }
 
-//go:generate moq -out gen_external_identity_resolver_moq_test.go . ExternalIdentityResolver
 type ExternalIdentityResolver interface {
 	Resolve(ctx context.Context, token string) (domain.ExternalIdentity, error)
 }
 
 type ExternalProvider string
 
-//go:generate moq -out gen_external_identity_resolver_registry_moq_test.go . ExternalIdentityResolverRegistry
 type ExternalIdentityResolverRegistry interface {
 	Get(provider ExternalProvider) (ExternalIdentityResolver, error)
 }

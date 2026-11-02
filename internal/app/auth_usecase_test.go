@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/air-hand-org/jobdeck-auth/internal/app"
+	"github.com/air-hand-org/jobdeck-auth/internal/appmock"
 	"github.com/air-hand-org/jobdeck-auth/internal/domain"
 	"github.com/air-hand-org/jobdeck-auth/internal/secret"
 	"testing"
@@ -74,9 +75,9 @@ func TestAuthUsecaseAuthenticateRejectsInactiveClient(t *testing.T) {
 		authStoreStub{repository: repository},
 		issuer,
 		secret.NewPHCBuilderFactory(),
-		&app.ExternalIdentityResolverRegistryMock{
+		&appmock.ExternalIdentityResolverRegistryMock{
 			GetFunc: func(app.ExternalProvider) (app.ExternalIdentityResolver, error) {
-				return &app.ExternalIdentityResolverMock{
+				return &appmock.ExternalIdentityResolverMock{
 					ResolveFunc: func(context.Context, string) (domain.ExternalIdentity, error) {
 						return domain.ExternalIdentity{}, errors.New("fail to resolve")
 					},
@@ -101,9 +102,9 @@ func TestAuthUsecaseAuthenticateRejectsInvalidSecret(t *testing.T) {
 		authStoreStub{repository: repository},
 		issuer,
 		secret.NewPHCBuilderFactory(),
-		&app.ExternalIdentityResolverRegistryMock{
+		&appmock.ExternalIdentityResolverRegistryMock{
 			GetFunc: func(app.ExternalProvider) (app.ExternalIdentityResolver, error) {
-				return &app.ExternalIdentityResolverMock{
+				return &appmock.ExternalIdentityResolverMock{
 					ResolveFunc: func(context.Context, string) (domain.ExternalIdentity, error) {
 						return domain.ExternalIdentity{}, errors.New("fail to resolve")
 					},
@@ -128,9 +129,9 @@ func TestAuthUsecaseAuthenticateReturnsIssuerToken(t *testing.T) {
 		authStoreStub{repository: repository},
 		issuer,
 		secret.NewPHCBuilderFactory(),
-		&app.ExternalIdentityResolverRegistryMock{
+		&appmock.ExternalIdentityResolverRegistryMock{
 			GetFunc: func(app.ExternalProvider) (app.ExternalIdentityResolver, error) {
-				return &app.ExternalIdentityResolverMock{
+				return &appmock.ExternalIdentityResolverMock{
 					ResolveFunc: func(context.Context, string) (domain.ExternalIdentity, error) {
 						return domain.ExternalIdentity{}, errors.New("fail to resolve")
 					},

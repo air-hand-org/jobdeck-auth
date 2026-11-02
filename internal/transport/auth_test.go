@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/air-hand-org/jobdeck-auth/internal/app"
+	"github.com/air-hand-org/jobdeck-auth/internal/appmock"
 	"github.com/air-hand-org/jobdeck-auth/internal/domain"
 	"github.com/air-hand-org/jobdeck-auth/internal/external"
 	"github.com/air-hand-org/jobdeck-auth/internal/secret"
@@ -59,13 +60,6 @@ func (tokenIssuerStub) Token(domain.ActorId, string, string, time.Time) (app.Acc
 	return app.AccessToken{Token: "token", TokenType: "Bearer", ExpiresInSec: 60}, nil
 }
 
-//go:generate moq -out gen_auth_store_moq_test.go -pkg transport ../app AuthStore
-//go:generate moq -out gen_auth_respository_moq_test.go -pkg transport ../app AuthRepository
-//go:generate moq -out gen_token_issuer_moq_test.go -pkg transport ../app TokenIssuer
-//go:generate moq -out gen_phc_builder_factory_moq_test.go -pkg transport ../app PHCBuilderFactory
-//go:generate moq -out gen_external_identity_resolver_moq_test.go -pkg transport ../app ExternalIdentityResolver
-//go:generate moq -out gen_external_identity_resolver_registry_moq_test.go -pkg transport ../app ExternalIdentityResolverRegistry
-
 func TestAuthServiceHandlerProtocols(t *testing.T) {
 	t.Parallel()
 
@@ -81,9 +75,9 @@ func TestAuthServiceHandlerProtocols(t *testing.T) {
 		}},
 		tokenIssuerStub{},
 		factory,
-		&ExternalIdentityResolverRegistryMock{
+		&appmock.ExternalIdentityResolverRegistryMock{
 			GetFunc: func(app.ExternalProvider) (app.ExternalIdentityResolver, error) {
-				return &ExternalIdentityResolverMock{
+				return &appmock.ExternalIdentityResolverMock{
 					ResolveFunc: func(context.Context, string) (domain.ExternalIdentity, error) {
 						return domain.ExternalIdentity{}, errors.New("failed to resolve")
 					},
@@ -138,7 +132,7 @@ func TestAuthServiceHandler_ExchangeExternalTokenGitHub(t *testing.T) {
 	expectedExternalID := "12235950"
 	expectedActorID := uuid.Max
 	expectedToken := fmt.Sprintf("token-%v", expectedActorID)
-	repository := &AuthRepositoryMock {
+	repository := &appmock.AuthRepositoryMock {
 		GetOrCreateActorByExternalIdentityFunc: func(ctx context.Context, actualIdentity domain.ExternalIdentity) (domain.Actor, error) {
 			require.Equal(t, string(external.ExternalProviderGitHub), actualIdentity.Issuer)
 			require.Equal(t, expectedExternalID, actualIdentity.Subject)
@@ -150,7 +144,7 @@ func TestAuthServiceHandler_ExchangeExternalTokenGitHub(t *testing.T) {
 		},
 	}
 	usecase := app.NewAuthUsecase(
-		&AuthStoreMock{
+		&appmock.AuthStoreMock{
 			AuthsFunc: func() app.AuthRepository {
 				return repository
 			},
@@ -158,17 +152,17 @@ func TestAuthServiceHandler_ExchangeExternalTokenGitHub(t *testing.T) {
 				return fn(ctx, repository)
 			},
 		},
-		&TokenIssuerMock{
+		&appmock.TokenIssuerMock{
 			TokenFunc: func (actualActorID domain.ActorId, actualActorType string, actualAudience string, actualNow time.Time) (app.AccessToken, error) {
 				require.Equal(t, expectedActorID, actualActorID)
 				return app.AccessToken{Token: expectedToken, TokenType: "Bearer", ExpiresInSec: 60}, nil
 			},
 		},
-		&PHCBuilderFactoryMock{},
-		&ExternalIdentityResolverRegistryMock{
+		&appmock.PHCBuilderFactoryMock{},
+		&appmock.ExternalIdentityResolverRegistryMock{
 			GetFunc: func(actualProvider app.ExternalProvider) (app.ExternalIdentityResolver, error) {
 				require.Equal(t, external.ExternalProviderGitHub, actualProvider)
-				return &ExternalIdentityResolverMock{
+				return &appmock.ExternalIdentityResolverMock{
 					ResolveFunc: func(ctx context.Context, actualExternalToken string) (domain.ExternalIdentity, error) {
 						require.Equal(t, expectedExternalToken, actualExternalToken)
 						return domain.ExternalIdentity{
