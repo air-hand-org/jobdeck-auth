@@ -2,7 +2,9 @@ package app_test
 
 import (
 	"context"
+	"errors"
 	"github.com/air-hand-org/jobdeck-auth/internal/app"
+	"github.com/air-hand-org/jobdeck-auth/internal/appmock"
 	"github.com/air-hand-org/jobdeck-auth/internal/domain"
 	"github.com/air-hand-org/jobdeck-auth/internal/secret"
 	"testing"
@@ -26,6 +28,11 @@ func (s *authRepositoryStub) UpdateLocalAuthClientSecretHash(context.Context, do
 	s.updates++
 	return nil
 }
+
+func (authRepositoryStub) GetOrCreateActorByExternalIdentity(context.Context, domain.ExternalIdentity) (domain.Actor, error) {
+	return domain.Actor{}, errors.New("not found")
+}
+
 
 type authStoreStub struct {
 	repository app.AuthRepository
@@ -64,7 +71,20 @@ func TestAuthUsecaseAuthenticateRejectsInactiveClient(t *testing.T) {
 
 	repository := &authRepositoryStub{client: localAuthClient(false, "secret")}
 	issuer := &tokenIssuerStub{}
-	usecase := app.NewAuthUsecase(authStoreStub{repository: repository}, issuer, secret.NewPHCBuilderFactory())
+	usecase := app.NewAuthUsecase(
+		authStoreStub{repository: repository},
+		issuer,
+		secret.NewPHCBuilderFactory(),
+		&appmock.ExternalIdentityResolverRegistryMock{
+			GetFunc: func(app.ExternalProvider) (app.ExternalIdentityResolver, error) {
+				return &appmock.ExternalIdentityResolverMock{
+					ResolveFunc: func(context.Context, string) (domain.ExternalIdentity, error) {
+						return domain.ExternalIdentity{}, errors.New("fail to resolve")
+					},
+				}, nil
+			},
+		},
+	)
 
 	_, err := usecase.Authenticate(context.Background(), "client", "secret", "jobdeck-job-api")
 
@@ -78,7 +98,20 @@ func TestAuthUsecaseAuthenticateRejectsInvalidSecret(t *testing.T) {
 
 	repository := &authRepositoryStub{client: localAuthClient(true, "secret")}
 	issuer := &tokenIssuerStub{}
-	usecase := app.NewAuthUsecase(authStoreStub{repository: repository}, issuer, secret.NewPHCBuilderFactory())
+	usecase := app.NewAuthUsecase(
+		authStoreStub{repository: repository},
+		issuer,
+		secret.NewPHCBuilderFactory(),
+		&appmock.ExternalIdentityResolverRegistryMock{
+			GetFunc: func(app.ExternalProvider) (app.ExternalIdentityResolver, error) {
+				return &appmock.ExternalIdentityResolverMock{
+					ResolveFunc: func(context.Context, string) (domain.ExternalIdentity, error) {
+						return domain.ExternalIdentity{}, errors.New("fail to resolve")
+					},
+				}, nil
+			},
+		},
+	)
 
 	_, err := usecase.Authenticate(context.Background(), "client", "incorrect", "jobdeck-job-api")
 
@@ -92,7 +125,20 @@ func TestAuthUsecaseAuthenticateReturnsIssuerToken(t *testing.T) {
 
 	repository := &authRepositoryStub{client: localAuthClient(true, "secret")}
 	issuer := &tokenIssuerStub{}
-	usecase := app.NewAuthUsecase(authStoreStub{repository: repository}, issuer, secret.NewPHCBuilderFactory())
+	usecase := app.NewAuthUsecase(
+		authStoreStub{repository: repository},
+		issuer,
+		secret.NewPHCBuilderFactory(),
+		&appmock.ExternalIdentityResolverRegistryMock{
+			GetFunc: func(app.ExternalProvider) (app.ExternalIdentityResolver, error) {
+				return &appmock.ExternalIdentityResolverMock{
+					ResolveFunc: func(context.Context, string) (domain.ExternalIdentity, error) {
+						return domain.ExternalIdentity{}, errors.New("fail to resolve")
+					},
+				}, nil
+			},
+		},
+	)
 
 	token, err := usecase.Authenticate(context.Background(), "client", "secret", "jobdeck-job-api")
 

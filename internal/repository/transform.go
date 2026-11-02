@@ -15,3 +15,12 @@ func localAuthClientFromDB(input authdb.AuthLocalAuthClientDetail) domain.LocalA
 		Active:     input.Active,
 	}
 }
+
+func actorFromDB(input authdb.AuthActor) domain.Actor {
+	return domain.Actor{
+		ActorID: input.ActorID,
+		Name:    input.Name,
+		Type:    input.Type,
+		Active:  input.Active,
+	}
+}

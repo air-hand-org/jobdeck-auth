@@ -5,6 +5,7 @@ linters:
     - govet
     - revive
     - testifylint
+    - depguard
   exclusions:
     paths:
       - gen/
@@ -14,6 +15,23 @@ linters:
         linters:
           - govet
           - revive
+  settings:
+    depguard:
+      rules:
+        appmock-test-only:
+          list-mode: lax
+          files:
+            - "$all"
+            - "!$test"
+          deny:
+            - pkg: github.com/air-hand-org/jobdeck-auth/internal/appmock
+              desc: appmock may only be imported by test files
+    revive:
+      rules:
+        - name: exported
+          disabled: true
+        - name: package-comments
+          disabled: true
 
 formatters:
   enable:

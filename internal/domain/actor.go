@@ -15,3 +15,10 @@ type LocalAuthClient struct {
 	Type       string // TODO ActorType
 	Active     bool
 }
+
+type Actor struct {
+	ActorID ActorId
+	Name    string
+	Type    string
+	Active  bool
+}
