@@ -15,7 +15,7 @@ require (
 	github.com/google/go-github/v93 v93.0.0
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.11.0
-	github.com/jferrl/go-githubauth v1.9.1
+	github.com/jferrl/go-githubauth/v2 v2.0.1
 	github.com/pressly/goose/v3 v3.29.0
 	github.com/stretchr/testify v1.12.1
 	github.com/testcontainers/testcontainers-go v0.44.0

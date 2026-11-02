@@ -7,7 +7,7 @@ import (
 	"github.com/air-hand-org/jobdeck-auth/internal/app"
 	"github.com/air-hand-org/jobdeck-auth/internal/domain"
 	"github.com/google/go-github/v93/github"
-	"github.com/jferrl/go-githubauth"
+	"github.com/jferrl/go-githubauth/v2"
 	"golang.org/x/oauth2"
 )
 
