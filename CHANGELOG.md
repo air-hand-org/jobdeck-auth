@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.1](https://github.com/air-hand-org/jobdeck-auth/compare/v1.4.0...v1.4.1) (2026-11-06)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/air-hand-org/api-contracts/packages/jobdeck/auth to v1.6.1 ([#78](https://github.com/air-hand-org/jobdeck-auth/issues/78)) ([9f1bb65](https://github.com/air-hand-org/jobdeck-auth/commit/9f1bb6519ee07e7ba69b569fb8768b9d8622adbc))
+* **deps:** update module github.com/jackc/pgx/v5 to v5.12.0 ([#89](https://github.com/air-hand-org/jobdeck-auth/issues/89)) ([d4eeee2](https://github.com/air-hand-org/jobdeck-auth/commit/d4eeee2e52ad4d4ab537a6822cd8e25a66dfe6ed))
+* **deps:** update module github.com/jferrl/go-githubauth to v1.11.0 ([#88](https://github.com/air-hand-org/jobdeck-auth/issues/88)) ([dfe4880](https://github.com/air-hand-org/jobdeck-auth/commit/dfe48809d668502ecf4fe441bb7d9022a3394586))
+* **deps:** update module github.com/jferrl/go-githubauth to v1.12.0 ([#93](https://github.com/air-hand-org/jobdeck-auth/issues/93)) ([e843ec8](https://github.com/air-hand-org/jobdeck-auth/commit/e843ec8e63c4366ce0676dab54b63f43b86a9417))
+
 ## [1.4.0](https://github.com/air-hand-org/jobdeck-auth/compare/v1.3.1...v1.4.0) (2026-11-02)
 
 
