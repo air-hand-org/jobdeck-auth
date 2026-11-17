@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.4.2](https://github.com/air-hand-org/jobdeck-auth/compare/v1.4.1...v1.4.2) (2026-11-17)
+
+
+### Bug Fixes
+
+* **deps:** update dependency go to v1.27.4 ([#107](https://github.com/air-hand-org/jobdeck-auth/issues/107)) ([94bef04](https://github.com/air-hand-org/jobdeck-auth/commit/94bef0452765bbc79856442f7a5b881f6488a45f))
+* **deps:** update module connectrpc.com/grpchealth/v2 to v2.1.0 ([#118](https://github.com/air-hand-org/jobdeck-auth/issues/118)) ([6e8c9c8](https://github.com/air-hand-org/jobdeck-auth/commit/6e8c9c8baa8db4b2917aa41ae2175cbff523c7e8))
+* **deps:** update module github.com/air-hand-org/api-contracts/packages/jobdeck/auth to v1.6.2 ([#114](https://github.com/air-hand-org/jobdeck-auth/issues/114)) ([36e36ed](https://github.com/air-hand-org/jobdeck-auth/commit/36e36ed5acd639005b14d30a447cadf6273ab489))
+* **deps:** update module github.com/jackc/pgx/v5 to v5.13.0 ([#112](https://github.com/air-hand-org/jobdeck-auth/issues/112)) ([2b0ff67](https://github.com/air-hand-org/jobdeck-auth/commit/2b0ff6749c62b1be8ad5f15d99cb5eccf021ae62))
+* **deps:** update module github.com/pressly/goose/v3 to v3.30.0 ([#109](https://github.com/air-hand-org/jobdeck-auth/issues/109)) ([87eb999](https://github.com/air-hand-org/jobdeck-auth/commit/87eb9993108fcdad68da359638b148c6c2e42db0))
+* **deps:** update module github.com/pressly/goose/v3 to v3.30.1 ([#116](https://github.com/air-hand-org/jobdeck-auth/issues/116)) ([a729198](https://github.com/air-hand-org/jobdeck-auth/commit/a729198ca5fbb9a7c9e4b8efacb4bb1fe7158f07))
+* **deps:** update module golang.org/x/crypto to v0.59.0 ([#111](https://github.com/air-hand-org/jobdeck-auth/issues/111)) ([3255449](https://github.com/air-hand-org/jobdeck-auth/commit/325544905d7d40489c2a4b50883fbad92cb37ebb))
+* **deps:** update module golang.org/x/oauth2 to v0.38.0 ([#102](https://github.com/air-hand-org/jobdeck-auth/issues/102)) ([e9de1cc](https://github.com/air-hand-org/jobdeck-auth/commit/e9de1cc49ba9001e5e7642f557fe151e37c38d4a))
+* **deps:** update module golang.org/x/sync to v0.25.0 ([#103](https://github.com/air-hand-org/jobdeck-auth/issues/103)) ([52312aa](https://github.com/air-hand-org/jobdeck-auth/commit/52312aa820036c227e2304a28845830baee38d07))
+* **deps:** update testcontainers-go monorepo to v0.45.0 ([#99](https://github.com/air-hand-org/jobdeck-auth/issues/99)) ([c228109](https://github.com/air-hand-org/jobdeck-auth/commit/c22810921b23acffc003ba0886253774a24a190d))
+
 ## [1.4.1](https://github.com/air-hand-org/jobdeck-auth/compare/v1.4.0...v1.4.1) (2026-11-07)
 
 
