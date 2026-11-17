@@ -5,7 +5,7 @@ go 1.27.4
 require (
 	buf.build/go/protovalidate v1.4.0
 	connectrpc.com/connect/v2 v2.0.2
-	connectrpc.com/grpchealth/v2 v2.0.0
+	connectrpc.com/grpchealth/v2 v2.1.0
 	connectrpc.com/grpcreflect/v2 v2.0.0
 	connectrpc.com/validate v0.9.0
 	github.com/air-hand-org/api-contracts/packages/jobdeck/auth v1.6.2
