@@ -38,6 +38,10 @@ check-clean:
 test:
 	@go test -cover ./...
 
+.PHONY: coverage
+coverage:
+	@bash scripts/coverage.sh
+
 .PHONY: schema-docs
 schema-docs:
 	@bash scripts/schema-docs.sh
