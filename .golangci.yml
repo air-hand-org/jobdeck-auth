@@ -6,6 +6,8 @@ linters:
     - revive
     - testifylint
     - depguard
+    - gocognit
+    - gocyclo
   exclusions:
     paths:
       - gen/
@@ -15,7 +17,27 @@ linters:
         linters:
           - govet
           - revive
+      # Allow only the existing diagnostic for each function, not later increases.
+      - path: ^cmd/entrypoint/main\.go$
+        linters: [gocognit]
+        text: '^cognitive complexity 14 of func `runMigrator` is high \(> 10\)$'
+      - path: ^cmd/server/main\.go$
+        linters: [gocognit]
+        text: '^cognitive complexity 13 of func `main` is high \(> 10\)$'
+      - path: ^cmd/server/main\.go$
+        linters: [gocyclo]
+        text: '^cyclomatic complexity 12 of func `main` is high \(> 10\)$'
+      - path: ^internal/secret/argon2id\.go$
+        linters: [gocognit]
+        text: '^cognitive complexity 22 of func `newArgon2IDPHCBuilderFromPHC` is high \(> 10\)$'
+      - path: ^internal/secret/argon2id\.go$
+        linters: [gocyclo]
+        text: '^cyclomatic complexity 18 of func `newArgon2IDPHCBuilderFromPHC` is high \(> 10\)$'
   settings:
+    gocognit:
+      min-complexity: 10
+    gocyclo:
+      min-complexity: 10
     depguard:
       rules:
         appmock-test-only:
