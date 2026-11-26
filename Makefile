@@ -36,7 +36,7 @@ check-clean:
 
 .PHONY: test
 test:
-	@go test -cover ./...
+	@go test -race -shuffle=on -cover ./...
 
 .PHONY: schema-docs
 schema-docs:
