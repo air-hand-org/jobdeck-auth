@@ -21,28 +21,13 @@ jobs:
       group: schema-pages
       cancel-in-progress: false
     permissions:
-      contents: read
       pages: write
       id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Check that the tested commit is still main HEAD
-        id: main-head
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TESTED_SHA: ${{ github.sha }}
-        run: |
-          head_sha=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)
-          if [[ "$head_sha" == "$TESTED_SHA" ]]; then
-            printf 'current=true\n' >> "$GITHUB_OUTPUT"
-          else
-            echo 'Skipping Pages deployment for a superseded main commit.'
-          fi
-      - if: steps.main-head.outputs.current == 'true'
-        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d
       - name: Deploy
         id: deployment
-        if: steps.main-head.outputs.current == 'true'
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346
