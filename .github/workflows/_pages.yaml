@@ -1,0 +1,36 @@
+name: Prepare Pages artifact
+
+on:
+  workflow_call:
+    inputs:
+      source-run-id:
+        type: string
+        required: true
+      artifact-name:
+        type: string
+        required: true
+
+permissions: {}
+
+jobs:
+  prepare:
+    runs-on: ubuntu-slim
+    permissions:
+      actions: read
+    steps:
+      - name: Download the archive produced by race-test CI
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: pages-build
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.source-run-id }}
+          path: ${{ runner.temp }}/pages-build
+      # Preserve the exact Pages tar from CI without unpacking or executing it.
+      - name: Upload the Pages archive
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: ${{ runner.temp }}/pages-build/artifact.tar
+          if-no-files-found: error
+          retention-days: 1
+          overwrite: true

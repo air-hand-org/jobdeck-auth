@@ -1,0 +1,58 @@
+name: Deploy Pages
+
+on:
+  # No upstream checkout or execution; prepare accepts only our main pushes.
+  workflow_run: # zizmor: ignore[dangerous-triggers]
+    workflows: [CI]
+    branches: [main]
+    types: [completed]
+
+permissions: {}
+
+jobs:
+  prepare:
+    # Only accept artifacts from a successful push to our own protected main.
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    uses: $/.github/workflows/_pages.yaml
+    permissions:
+      actions: read
+    with:
+      source-run-id: ${{ format('{0}', github.event.workflow_run.id) }}
+      artifact-name: github-pages
+
+  deploy:
+    needs: prepare
+    runs-on: ubuntu-latest
+    concurrency:
+      group: schema-pages
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check that the tested commit is still main HEAD
+        id: main-head
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TESTED_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          head_sha=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)
+          if [[ "$head_sha" == "$TESTED_SHA" ]]; then
+            printf 'current=true\n' >> "$GITHUB_OUTPUT"
+          else
+            echo 'Skipping Pages deployment for a superseded main commit.'
+          fi
+      - if: steps.main-head.outputs.current == 'true'
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d
+      - name: Deploy
+        id: deployment
+        if: steps.main-head.outputs.current == 'true'
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346
