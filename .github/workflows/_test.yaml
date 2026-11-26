@@ -53,4 +53,4 @@ jobs:
         uses: actions/upload-pages-artifact@5f327015a708106f6f1b7c9a633901af30fe80cb
         with:
           name: pages-preview
-          path: tmp/schema-erd
+          path: pages

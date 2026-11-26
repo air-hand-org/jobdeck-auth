@@ -32,15 +32,5 @@ go tool cover -func="$work/coverage.out" > "$work/functions"
 total=$(awk '$1 == "total:" { print $NF }' "$work/functions")
 [[ "$total" =~ ^[0-9]+\.[0-9]%$ ]]
 printf 'Total statement coverage: %s\n' "$total"
-go tool cover -html="$work/coverage.out" -o "$work/report.html"
-awk -v total="$total" '
-  /<div id="nav">/ {
-    print
-    print "<strong>Total statement coverage: " total "</strong> &nbsp;"
-    inserted++
-    next
-  }
-  { print }
-  END { if (inserted != 1) exit 1 }
-' "$work/report.html" > "$work/index.html"
-install -D -m 644 "$work/index.html" tmp/schema-erd/coverage/index.html
+mkdir -p pages/coverage
+go tool cover -html="$work/coverage.out" -o pages/coverage/index.html
