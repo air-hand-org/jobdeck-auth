@@ -29,7 +29,21 @@ RUN --mount=type=cache,target=/go/pkg/mod,id=jobdeck-go-mod \
     --mount=type=cache,target=/root/.cache/go-build,id=jobdeck-go-build \
     CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/auth-entrypoint ./cmd/entrypoint
 
-FROM gcr.io/distroless/base-debian12:nonroot
+FROM gcr.io/distroless/base-debian12:nonroot AS migrator
+COPY LICENSE /LICENSE
+COPY third_party/licenses/linux-amd64 /third_party
+COPY --from=build /out/auth-migrator /auth-migrator
+USER nonroot:nonroot
+ENTRYPOINT ["/auth-migrator"]
+
+FROM gcr.io/distroless/base-debian12:nonroot AS app
+COPY LICENSE /LICENSE
+COPY third_party/licenses/linux-amd64 /third_party
+COPY --from=build /out/auth /auth
+USER nonroot:nonroot
+ENTRYPOINT ["/auth"]
+
+FROM gcr.io/distroless/base-debian12:nonroot AS auth
 COPY LICENSE /LICENSE
 COPY third_party/licenses/linux-amd64 /third_party
 COPY --from=build /out/auth /auth

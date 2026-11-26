@@ -7,6 +7,9 @@ import (
 
 	migrations "github.com/air-hand-org/jobdeck-auth/internal/db/auth"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
 	_ "github.com/jackc/pgx/v5/stdlib" // Register the pgx database driver.
 	"github.com/pressly/goose/v3"
 )
@@ -21,23 +24,35 @@ func configure() error {
 
 // Up applies all pending auth migrations.
 func Up(ctx context.Context, connectionString string) error {
-	return withDB(connectionString, func(db *sql.DB) error {
+	return withDB(ctx, connectionString, func(db *sql.DB) error {
 		return up(ctx, db)
 	})
 }
 
 // DownTo0 rolls back all auth migrations.
 func DownTo0(ctx context.Context, connectionString string) error {
-	return withDB(connectionString, func(db *sql.DB) error {
+	return withDB(ctx, connectionString, func(db *sql.DB) error {
 		return downTo0(ctx, db)
 	})
 }
 
-func withDB(connectionString string, fn func(*sql.DB) error) error {
-	db, err := sql.Open("pgx", connectionString)
+func withDB(ctx context.Context, connectionString string, fn func(*sql.DB) error) error {
+	// FIXME: implement to other services
+	cfg, err := pgxpool.ParseConfig(connectionString)
 	if err != nil {
 		return err
 	}
+//	cfg.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
+//		_, err := conn.Exec(ctx, "SET ROLE migrator;")
+//		return err
+//	}
+	pool, err := pgxpool.NewWithConfig(ctx, cfg)
+	if err != nil {
+		return err
+	}
+	defer func() { pool.Close() }()
+
+	db := stdlib.OpenDBFromPool(pool)
 	defer func() { _ = db.Close() }()
 
 	return fn(db)

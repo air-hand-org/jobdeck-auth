@@ -35,6 +35,15 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    strategy:
+      matrix:
+        target:
+          - stage: auth
+            ghcr: jobdeck-auth
+          - stage: app
+            ghcr: jobdeck-auth-app
+          - stage: migrator
+            ghcr: jobdeck-auth-migrator
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -48,9 +57,11 @@ jobs:
           push: false
           load: true
           tags: jobdeck-auth:test
-          cache-from: type=gha,scope=auth
-          cache-to: type=gha,mode=max,scope=auth
+          target: ${{ matrix.target.stage }}
+          cache-from: type=gha,scope=${{ matrix.target.stage }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.target.stage }}
       - name: Test auth HTTP and gRPC routing
+        if: matrix.target.stage == 'auth'
         run: make auth-server-integration-test
 
   publish:
@@ -61,10 +72,24 @@ jobs:
       contents: read
       packages: write
       id-token: write
+    strategy:
+      matrix:
+        target:
+          - stage: auth
+            ghcr: jobdeck-auth
+          - stage: migrator
+            ghcr: jobdeck-auth-migrator
     env:
       ARTIFACT_REGISTRY_HOST: asia-northeast1-docker.pkg.dev
       IMAGE_TAG: ${{ inputs.image_tag }}
     steps:
+      - name: setup IMAGE envs
+        run: |
+          echo "AR_IMAGE=${AR_IMAGE}" >> "$GITHUB_ENV"
+          echo "GHCR_IMAGE=${GHCR_IMAGE}" >> "$GITHUB_ENV"
+        env:
+          AR_IMAGE: ${{ env.ARTIFACT_REGISTRY_HOST }}/${{ vars.GCP_PROJECT_ID }}/jobdeck-auth/${{ matrix.target.stage }}:${{ env.IMAGE_TAG }}
+          GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/${{ matrix.target.ghcr }}:${{ env.IMAGE_TAG }}
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -91,7 +116,7 @@ jobs:
         id: image
         uses: air-hand-org/jobdeck-actions/actions/image-exists@5d5ae954d815d44bd28dbebd4c920773aed02c8d # v1.7.4
         with:
-          image: ${{ env.ARTIFACT_REGISTRY_HOST }}/${{ vars.GCP_PROJECT_ID }}/jobdeck-auth/auth:${{ env.IMAGE_TAG }}
+          image: ${{ env.AR_IMAGE }}
       - name: Build and push auth image
         if: ${{ steps.image.outputs.exists != 'true' }}
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
@@ -99,9 +124,10 @@ jobs:
           context: .
           platforms: linux/amd64
           push: true
-          tags: ${{ env.ARTIFACT_REGISTRY_HOST }}/${{ vars.GCP_PROJECT_ID }}/jobdeck-auth/auth:${{ env.IMAGE_TAG }}
-          cache-from: type=gha,scope=auth
-          cache-to: type=gha,mode=max,scope=auth
+          tags: ${{ env.AR_IMAGE }}
+          target: ${{ matrix.target.stage }}
+          cache-from: type=gha,scope=${{ matrix.target.stage }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.target.stage }}
       - name: Login to GHCR
         uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
         with:
@@ -112,5 +138,5 @@ jobs:
       - name: Copy auth image to GHCR if missing
         uses: air-hand-org/jobdeck-actions/actions/copy-image@5d5ae954d815d44bd28dbebd4c920773aed02c8d # v1.7.4
         with:
-          src: ${{ env.ARTIFACT_REGISTRY_HOST }}/${{ vars.GCP_PROJECT_ID }}/jobdeck-auth/auth:${{ env.IMAGE_TAG }}
-          dest: ghcr.io/${{ github.repository_owner }}/jobdeck-auth:${{ env.IMAGE_TAG }}
+          src: ${{ env.AR_IMAGE }}
+          dest: ${{ env.GHCR_IMAGE }}
