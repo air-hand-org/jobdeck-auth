@@ -44,10 +44,17 @@ test:
 test-race: GO_TEST_FLAGS := -race
 test-race: test
 
+.PHONY: coverage
+coverage:
+	@set -eu; profile=$$(mktemp); trap 'rm -f "$$profile"' EXIT; \
+	  go test -shuffle="$(GO_TEST_SHUFFLE)" $(GO_TEST_FLAGS) -coverprofile="$$profile" ./...; \
+	  mkdir -p pages/coverage; \
+	  go tool cover -html="$$profile" -o pages/coverage/index.html
+
 .PHONY: schema-docs
 schema-docs:
 	@bash scripts/schema-docs.sh
 
 .PHONY: schema-erd
 schema-erd:
-	liam erd build --format tbls --input docs/schema/schema.json --output-dir tmp/schema-erd
+	liam erd build --format tbls --input docs/schema/schema.json --output-dir pages/schema-erd
