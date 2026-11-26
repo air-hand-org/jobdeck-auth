@@ -35,3 +35,38 @@ jobs:
     steps:
       - name: exit with failure
         run: exit 1
+
+  schema-pages:
+    needs: ci
+    if: >-
+      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      needs.ci.result == 'success'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: schema-pages
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check that this run still targets main HEAD
+        id: main-head
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          head_sha=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)
+          if [[ "$head_sha" == "$GITHUB_SHA" ]]; then
+            printf 'current=true\n' >> "$GITHUB_OUTPUT"
+          else
+            echo 'Skipping Pages deployment for a superseded main commit.'
+          fi
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d
+        if: steps.main-head.outputs.current == 'true'
+      - name: Deploy
+        id: deployment
+        if: steps.main-head.outputs.current == 'true'
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346

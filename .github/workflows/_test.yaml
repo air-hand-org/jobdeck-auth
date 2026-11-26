@@ -48,9 +48,11 @@ jobs:
         run: make check-clean
       - name: race test and render coverage
         run: make coverage GO_TEST_FLAGS=-race
-      - name: Upload Pages preview
-        if: github.event_name == 'pull_request'
+      - name: Upload Pages artifact
+        if: >-
+          github.event_name == 'pull_request' ||
+          (github.event_name == 'push' && github.ref == 'refs/heads/main')
         uses: actions/upload-pages-artifact@5f327015a708106f6f1b7c9a633901af30fe80cb
         with:
-          name: pages-preview
+          name: ${{ case(github.event_name == 'pull_request', 'pages-preview', 'github-pages') }}
           path: pages
