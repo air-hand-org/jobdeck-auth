@@ -1,31 +1,21 @@
 name: Deploy Pages
 
 on:
-  # No upstream checkout or execution; prepare accepts only our main pushes.
-  workflow_run: # zizmor: ignore[dangerous-triggers]
-    workflows: [CI]
+  push:
     branches: [main]
-    types: [completed]
 
 permissions: {}
 
 jobs:
-  prepare:
-    # Only accept artifacts from a successful push to our own protected main.
-    if: >-
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'push' &&
-      github.event.workflow_run.head_branch == 'main' &&
-      github.event.workflow_run.head_repository.full_name == github.repository
+  build:
     uses: $/.github/workflows/_pages.yaml
     permissions:
-      actions: read
+      contents: read
     with:
-      source-run-id: ${{ format('{0}', github.event.workflow_run.id) }}
       artifact-name: github-pages
 
   deploy:
-    needs: prepare
+    needs: build
     runs-on: ubuntu-latest
     concurrency:
       group: schema-pages
@@ -42,7 +32,7 @@ jobs:
         id: main-head
         env:
           GH_TOKEN: ${{ github.token }}
-          TESTED_SHA: ${{ github.event.workflow_run.head_sha }}
+          TESTED_SHA: ${{ github.sha }}
         run: |
           head_sha=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)
           if [[ "$head_sha" == "$TESTED_SHA" ]]; then

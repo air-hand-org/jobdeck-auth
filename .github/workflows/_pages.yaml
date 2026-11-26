@@ -1,11 +1,8 @@
-name: Prepare Pages artifact
+name: Build Pages artifact
 
 on:
   workflow_call:
     inputs:
-      source-run-id:
-        type: string
-        required: true
       artifact-name:
         type: string
         required: true
@@ -13,24 +10,21 @@ on:
 permissions: {}
 
 jobs:
-  prepare:
-    runs-on: ubuntu-slim
+  build:
+    runs-on: ubuntu-latest
     permissions:
-      actions: read
+      contents: read
     steps:
-      - name: Download the archive produced by race-test CI
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          name: pages-build
-          github-token: ${{ github.token }}
-          run-id: ${{ inputs.source-run-id }}
-          path: ${{ runner.temp }}/pages-build
-      # Preserve the exact Pages tar from CI without unpacking or executing it.
-      - name: Upload the Pages archive
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+          persist-credentials: false
+      - uses: air-hand-org/jobdeck-actions/actions/setup-tools@5d5ae954d815d44bd28dbebd4c920773aed02c8d # v1.7.4
+      - name: Build interactive schema ERD
+        run: make schema-erd
+      - name: Test and render coverage
+        run: make coverage
+      - name: Upload Pages archive
+        uses: actions/upload-pages-artifact@5f327015a708106f6f1b7c9a633901af30fe80cb
         with:
           name: ${{ inputs.artifact-name }}
-          path: ${{ runner.temp }}/pages-build/artifact.tar
-          if-no-files-found: error
-          retention-days: 1
-          overwrite: true
+          path: pages
