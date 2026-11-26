@@ -32,3 +32,11 @@ jobs:
     with:
       push: false
     secrets: inherit
+
+  pages-preview:
+    if: github.event_name == 'pull_request'
+    uses: $/.github/workflows/_pages.yaml
+    permissions:
+      contents: read
+    with:
+      artifact-name: pages-preview
