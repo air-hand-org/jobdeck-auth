@@ -34,9 +34,15 @@ check-clean:
 	@git status --short
 	@test -z "$$(git status --porcelain)"
 
-.PHONY: test
+# Set to a seed printed by go test to reproduce the test order.
+GO_TEST_SHUFFLE ?= on
+
+.PHONY: test test-race
 test:
-	@go test -cover ./...
+	@go test -shuffle="$(GO_TEST_SHUFFLE)" -cover $(GO_TEST_FLAGS) ./...
+
+test-race: GO_TEST_FLAGS := -race
+test-race: test
 
 .PHONY: schema-docs
 schema-docs:
