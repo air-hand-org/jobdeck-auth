@@ -6,6 +6,10 @@ on:
 
 permissions: {}
 
+concurrency:
+  group: schema-pages
+  cancel-in-progress: true
+
 jobs:
   build:
     uses: $/.github/workflows/_pages.yaml
@@ -17,9 +21,6 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    concurrency:
-      group: schema-pages
-      cancel-in-progress: false
     permissions:
       pages: write
       id-token: write
