@@ -2,11 +2,7 @@
 
 ## Test coverage
 
-[Go coverage report](https://air-hand-org.github.io/jobdeck-auth/coverage/) shows
-source-colored per-file results from the latest
-published stable release. It covers instrumented Go production code under
-`cmd/` and `internal/`, including generated database code but excluding tests,
-fixtures, and generated mocks. Run `make coverage` to generate the report locally.
+[Go coverage report](https://air-hand-org.github.io/jobdeck-auth/coverage/)
 
 ## Database schema
 

@@ -46,7 +46,10 @@ test-race: test
 
 .PHONY: coverage
 coverage:
-	@bash scripts/coverage.sh -shuffle="$(GO_TEST_SHUFFLE)" $(GO_TEST_FLAGS)
+	@set -eu; profile=$$(mktemp); trap 'rm -f "$$profile"' EXIT; \
+	  go test -shuffle="$(GO_TEST_SHUFFLE)" $(GO_TEST_FLAGS) -coverprofile="$$profile" ./...; \
+	  mkdir -p pages/coverage; \
+	  go tool cover -html="$$profile" -o pages/coverage/index.html
 
 .PHONY: schema-docs
 schema-docs:
