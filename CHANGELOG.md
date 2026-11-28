@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.3](https://github.com/air-hand-org/jobdeck-auth/compare/v1.4.2...v1.4.3) (2026-11-28)
+
+
+### Bug Fixes
+
+* **deps:** update module buf.build/go/protovalidate to v1.4.1 ([#125](https://github.com/air-hand-org/jobdeck-auth/issues/125)) ([e43e002](https://github.com/air-hand-org/jobdeck-auth/commit/e43e002407071fd78f9460ef98cc545099af9b23))
+
 ## [1.4.2](https://github.com/air-hand-org/jobdeck-auth/compare/v1.4.1...v1.4.2) (2026-11-17)
 
 
